@@ -5,5 +5,6 @@ namespace Worker_Schedule_Web_Api.Models.Identity
 {
     public class AppUser : IdentityUser
     {
+        public Worker? Worker { get; set; }
     }
 }
