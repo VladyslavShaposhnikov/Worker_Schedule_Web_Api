@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Worker_Schedule_Web_Api.Data;
 using Worker_Schedule_Web_Api.Models.Identity;
+using Scalar.AspNetCore;
 
 namespace Worker_Schedule_Web_Api
 {
@@ -60,6 +61,7 @@ namespace Worker_Schedule_Web_Api
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
+                app.MapScalarApiReference();
             }
 
             app.UseHttpsRedirection();
