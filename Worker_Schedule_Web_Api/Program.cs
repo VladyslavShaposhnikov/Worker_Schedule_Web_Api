@@ -7,12 +7,13 @@ using System.Text;
 using Worker_Schedule_Web_Api.Data;
 using Worker_Schedule_Web_Api.Models.Identity;
 using Scalar.AspNetCore;
+using System.Threading.Tasks;
 
 namespace Worker_Schedule_Web_Api
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,7 @@ namespace Worker_Schedule_Web_Api
 
             builder.Services.AddDbContext<AppDbContext>();
             builder.Services.AddIdentityCore<AppUser>()
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddDefaultTokenProviders();
 
@@ -57,12 +59,26 @@ namespace Worker_Schedule_Web_Api
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            using (var scopeService = app.Services.CreateScope())
             {
-                app.MapOpenApi();
-                app.MapScalarApiReference();
+                var services = scopeService.ServiceProvider;
+                var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+                if (! await roleManager.RoleExistsAsync(AppRoles.Worker))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(AppRoles.Worker));
+                }
+                if (!await roleManager.RoleExistsAsync(AppRoles.Manager))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(AppRoles.Manager));
+                }
             }
+
+                // Configure the HTTP request pipeline.
+                if (app.Environment.IsDevelopment())
+                {
+                    app.MapOpenApi();
+                    app.MapScalarApiReference();
+                }
 
             app.UseHttpsRedirection();
 

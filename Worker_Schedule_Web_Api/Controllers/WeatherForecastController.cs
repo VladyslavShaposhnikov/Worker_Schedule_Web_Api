@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Worker_Schedule_Web_Api.Models.Identity;
 
 namespace Worker_Schedule_Web_Api.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = AppRoles.Worker)]
     [ApiController]
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
