@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using Worker_Schedule_Web_Api.Data;
 using Worker_Schedule_Web_Api.DTOs.Availability;
+using Worker_Schedule_Web_Api.Exceptions;
 using Worker_Schedule_Web_Api.Models.Domain;
-using Worker_Schedule_Web_Api.Models.Identity;
 using Worker_Schedule_Web_Api.Services.Interfaces;
 
 namespace Worker_Schedule_Web_Api.Services
@@ -14,12 +13,6 @@ namespace Worker_Schedule_Web_Api.Services
         public async Task<GetAvailabilityDto> CreateAvailability(CreateAvailabilityDto form)
         {
             var result = await SetAvailability(form.Date, form.From, form.To);
-
-            if (result == null)
-            {
-                return null;
-            }
-
             return result;
         }
 
@@ -34,7 +27,7 @@ namespace Worker_Schedule_Web_Api.Services
             }
         }
 
-        public async Task<GetAvailabilityDto?> GetAvailability(DateOnly date)
+        public async Task<GetAvailabilityDto> GetAvailability(DateOnly date)
         {
             var worker = await GetWorker();
             var availability = await context.Availabilities
@@ -43,14 +36,14 @@ namespace Worker_Schedule_Web_Api.Services
 
             if (availability == null)
             {
-                return null;
+                throw new AvailabilityNotFoundException();
             }
 
             var result = new GetAvailabilityDto
             {
                 WorkerInternalNumber = worker.WorkerInternalNumber,
                 WorkerName = $"{worker.FirstName} {worker.LastName}",
-                WorkerPosition = worker.Position?.Name,
+                WorkerPosition = worker.Position?.Name ?? "not specified",
                 From = availability.WorkingUnit.From,
                 To = availability.WorkingUnit.To,
                 Date = availability.Date
@@ -87,10 +80,6 @@ namespace Worker_Schedule_Web_Api.Services
             // for not it is not overriding just returning null instead
             // in contrast method DayOffAvailability can override (delete) existing availability
             var result = await SetAvailability(date, new TimeOnly(0, 0), new TimeOnly(23, 59));
-            if (result == null)
-            {
-                return null;
-            }
             return result;
         }
 
@@ -102,7 +91,7 @@ namespace Worker_Schedule_Web_Api.Services
                 .FirstOrDefaultAsync(a => a.Date == date && a.WorkerId == worker.Id);
             if (availability == null)
             {
-                return null;
+                throw new AvailabilityNotFoundException();
             }
 
             var getWorkingUnit = await context.WorkingUnits
@@ -115,12 +104,9 @@ namespace Worker_Schedule_Web_Api.Services
                     To = workingUnit.To
                 };
                 context.WorkingUnits.Add(getWorkingUnit);
-                await context.SaveChangesAsync();
             }
 
-            availability.WorkingUnitId = getWorkingUnit.Id;
-
-            context.Availabilities.Update(availability);
+            availability.WorkingUnit = getWorkingUnit;
             await context.SaveChangesAsync();
 
             var result = new GetAvailabilityDto
@@ -130,19 +116,19 @@ namespace Worker_Schedule_Web_Api.Services
                 To = getWorkingUnit.To,
                 WorkerInternalNumber = worker.WorkerInternalNumber,
                 WorkerName = $"{worker.FirstName} {worker.LastName}",
-                WorkerPosition = worker.Position?.Name
+                WorkerPosition = worker.Position?.Name ?? "not specified"
             };
             return result;
         }
 
-        private async Task<GetAvailabilityDto?> SetAvailability(DateOnly date, TimeOnly from, TimeOnly to)
+        private async Task<GetAvailabilityDto> SetAvailability(DateOnly date, TimeOnly from, TimeOnly to)
         {
             var worker = await GetWorker();
             var isDateExist = await context.Availabilities.AnyAsync(a => a.Date == date && a.WorkerId == worker.Id);
-            if (isDateExist)
-            {
-                return null;
-            }
+
+            if (isDateExist) throw new AvailabilityExistsException(date);
+
+            if (from >= to) throw new InvalidWorkingHoursException();
 
             var workingUnit = await context.WorkingUnits.FirstOrDefaultAsync(wu => wu.From == from && wu.To == to);
             if (workingUnit == null)
@@ -174,23 +160,19 @@ namespace Worker_Schedule_Web_Api.Services
                 To = to,
                 WorkerInternalNumber = worker.WorkerInternalNumber,
                 WorkerName = $"{worker.FirstName} {worker.LastName}",
-                WorkerPosition = worker.Position?.Name
+                WorkerPosition = worker.Position?.Name ?? "not specified"
             };
 
             return result;
         }
 
-        private async Task<Worker?> GetWorker()
+        private async Task<Worker> GetWorker()
         {
-            var userId = currentUser.UserId;
+            var userId = currentUser.UserId ?? throw new UnauthorizedDomainException();
 
             var worker = await context.Workers
                 .Include(w => w.Position)
-                .FirstOrDefaultAsync(w => w.AppUserId == userId);
-            if (worker == null)
-            {
-                return null;
-            }
+                .FirstOrDefaultAsync(w => w.AppUserId == userId) ?? throw new UnauthorizedDomainException();
 
             return worker;
         }

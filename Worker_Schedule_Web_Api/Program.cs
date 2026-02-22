@@ -10,6 +10,7 @@ using Scalar.AspNetCore;
 using System.Threading.Tasks;
 using Worker_Schedule_Web_Api.Services.Interfaces;
 using Worker_Schedule_Web_Api.Services;
+using Worker_Schedule_Web_Api.Middleware;
 
 namespace Worker_Schedule_Web_Api
 {
@@ -85,6 +86,8 @@ namespace Worker_Schedule_Web_Api
                 app.MapOpenApi();
                 app.MapScalarApiReference();
             }
+
+            app.UseMiddleware<GlobalExceptionMiddleware>();
 
             // for testing purposes only!!!
             app.Use(async (context, next) =>
