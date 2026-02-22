@@ -8,6 +8,8 @@ using Worker_Schedule_Web_Api.Data;
 using Worker_Schedule_Web_Api.Models.Identity;
 using Scalar.AspNetCore;
 using System.Threading.Tasks;
+using Worker_Schedule_Web_Api.Services.Interfaces;
+using Worker_Schedule_Web_Api.Services;
 
 namespace Worker_Schedule_Web_Api
 {
@@ -20,6 +22,10 @@ namespace Worker_Schedule_Web_Api
             // Add services to the container.
 
             builder.Services.AddControllers();
+            builder.Services.AddHttpContextAccessor();
+
+            builder.Services.AddScoped<IAvailabilityService, AvailabilityService>();
+            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
             builder.Services.AddDbContext<AppDbContext>();
             builder.Services.AddIdentityCore<AppUser>()
@@ -73,12 +79,27 @@ namespace Worker_Schedule_Web_Api
                 }
             }
 
-                // Configure the HTTP request pipeline.
-                if (app.Environment.IsDevelopment())
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.MapOpenApi();
+                app.MapScalarApiReference();
+            }
+
+            // for testing purposes only!!!
+            app.Use(async (context, next) =>
+            {
+                var config = context.RequestServices.GetRequiredService<IConfiguration>();
+
+                var token = config["TestToken"];
+
+                if (!string.IsNullOrEmpty(token))
                 {
-                    app.MapOpenApi();
-                    app.MapScalarApiReference();
+                    context.Request.Headers.TryAdd("Authorization", $"Bearer {token}");
                 }
+
+                await next();
+            });
 
             app.UseHttpsRedirection();
 
