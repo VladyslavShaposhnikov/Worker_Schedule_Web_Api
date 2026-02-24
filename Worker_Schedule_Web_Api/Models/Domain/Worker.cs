@@ -6,6 +6,7 @@ namespace Worker_Schedule_Web_Api.Models.Domain
     {
         public Guid Id { get; set; }
         public int WorkerInternalNumber { get; set; }
+        public int EmploymentPercentage { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public int? StoreId { get; set; } = 16614;
