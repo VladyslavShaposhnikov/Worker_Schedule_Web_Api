@@ -39,6 +39,14 @@ namespace Worker_Schedule_Web_Api.Controllers
             return CreatedAtAction(nameof(GetAvailability), new { date = result.Date }, result);
         }
 
+        [HttpPost]
+        [Route("month/{year:int}/{month:int}")]
+        public async Task<ActionResult<List<GetAvailabilityDto>>> CreateAvailability(CreateAvailabilityDto[] form, int year, int month)
+        {
+            var result = await availabilityService.CreateMonthAvailability(form, year, month);
+            return result;
+        }
+
         [HttpPut]
         [Route("{date}")]
         public async Task<ActionResult<GetAvailabilityDto>> UpdateAvailability([FromRoute] DateOnly date, UpdateAvailabilityDto workingUnit)
@@ -55,7 +63,7 @@ namespace Worker_Schedule_Web_Api.Controllers
             return CreatedAtAction(nameof(GetAvailability), new { date = result.Date }, result);
         }
 
-        [HttpPost]
+        [HttpDelete]
         [Route("{date}/day-off")]
         public async Task<ActionResult<GetAvailabilityDto>> DayOffAvailability([FromRoute] DateOnly date)
         {

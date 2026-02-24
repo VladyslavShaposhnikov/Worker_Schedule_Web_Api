@@ -12,7 +12,13 @@ namespace Worker_Schedule_Web_Api.Services
     {
         public async Task<GetAvailabilityDto> CreateAvailability(CreateAvailabilityDto form)
         {
-            var result = await SetAvailability(form.Date, form.From, form.To);
+            var worker = await GetWorker();
+            var isDateExist = await context.Availabilities.AnyAsync(a => a.Date == form.Date && a.WorkerId == worker.Id);
+
+            if (isDateExist) throw new AvailabilityExistsException(form.Date);
+
+            var result = await SetAvailability(worker, form.Date, form.From, form.To);
+            await context.SaveChangesAsync();
             return result;
         }
 
@@ -76,10 +82,13 @@ namespace Worker_Schedule_Web_Api.Services
 
         public async Task<GetAvailabilityDto> SetFullAvailability(DateOnly date)
         {
-            // ToDo: decide is this method should override existing availability
-            // for not it is not overriding just returning null instead
-            // in contrast method DayOffAvailability can override (delete) existing availability
-            var result = await SetAvailability(date, new TimeOnly(0, 0), new TimeOnly(23, 59));
+            var worker = await GetWorker();
+
+            var isDateExist = await context.Availabilities.AnyAsync(a => a.Date == date && a.WorkerId == worker.Id);
+            if (isDateExist) throw new AvailabilityExistsException(date);
+
+            var result = await SetAvailability(worker, date, new TimeOnly(0, 0), new TimeOnly(23, 59));
+            await context.SaveChangesAsync();
             return result;
         }
 
@@ -121,13 +130,8 @@ namespace Worker_Schedule_Web_Api.Services
             return result;
         }
 
-        private async Task<GetAvailabilityDto> SetAvailability(DateOnly date, TimeOnly from, TimeOnly to)
+        private async Task<GetAvailabilityDto> SetAvailability(Worker worker, DateOnly date, TimeOnly from, TimeOnly to)
         {
-            var worker = await GetWorker();
-            var isDateExist = await context.Availabilities.AnyAsync(a => a.Date == date && a.WorkerId == worker.Id);
-
-            if (isDateExist) throw new AvailabilityExistsException(date);
-
             if (from >= to) throw new InvalidWorkingHoursException();
 
             var workingUnit = await context.WorkingUnits.FirstOrDefaultAsync(wu => wu.From == from && wu.To == to);
@@ -151,7 +155,6 @@ namespace Worker_Schedule_Web_Api.Services
             };
 
             context.Availabilities.Add(entity);
-            await context.SaveChangesAsync();
 
             var result = new GetAvailabilityDto
             {
@@ -175,6 +178,30 @@ namespace Worker_Schedule_Web_Api.Services
                 .FirstOrDefaultAsync(w => w.AppUserId == userId) ?? throw new UnauthorizedDomainException();
 
             return worker;
+        }
+
+        public async Task<List<GetAvailabilityDto>> CreateMonthAvailability(CreateAvailabilityDto[] form, int year, int month)
+        {
+            var result = new List<GetAvailabilityDto>();
+            var worker = await GetWorker();
+
+            var existingDates = await context.Availabilities
+                .Where(a => a.Date.Year == year && a.Date.Month == month && a.WorkerId == worker.Id)
+                .Select(a => a.Date)
+                .ToListAsync();
+
+
+            foreach (var availability in form)
+            {
+                if (availability.Date.Year != year || availability.Date.Month != month) throw new InvalidAvailabilityDateException(availability.Date);
+                if (existingDates.Contains(availability.Date)) throw new AvailabilityExistsException(availability.Date);
+
+                result.Add(await SetAvailability(worker, availability.Date, availability.From, availability.To));
+            }
+
+            await context.SaveChangesAsync();
+
+            return result;
         }
     }
 }
