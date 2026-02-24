@@ -10,7 +10,7 @@ namespace Worker_Schedule_Web_Api.Services
 {
     public class AvailabilityService(AppDbContext context, ICurrentUserService currentUser) : IAvailabilityService
     {
-        public async Task<GetAvailabilityDto> CreateAvailability(CreateAvailabilityDto form)
+        public async Task<GetAvailabilityDto> CreateAvailability(CreateUpdateAvailabilityDto form)
         {
             var worker = await GetWorker();
             var isDateExist = await context.Availabilities.AnyAsync(a => a.Date == form.Date && a.WorkerId == worker.Id);
@@ -92,41 +92,11 @@ namespace Worker_Schedule_Web_Api.Services
             return result;
         }
 
-        public async Task<GetAvailabilityDto> UpdateAvailability(DateOnly date, UpdateAvailabilityDto workingUnit)
+        public async Task<GetAvailabilityDto> UpdateAvailability(CreateUpdateAvailabilityDto form)
         {
             var worker = await GetWorker();
-            var availability = await context.Availabilities
-                .Include(a => a.WorkingUnit)
-                .FirstOrDefaultAsync(a => a.Date == date && a.WorkerId == worker.Id);
-            if (availability == null)
-            {
-                throw new AvailabilityNotFoundException();
-            }
-
-            var getWorkingUnit = await context.WorkingUnits
-                .FirstOrDefaultAsync(wu => wu.From == workingUnit.From && wu.To == workingUnit.To);
-            if (getWorkingUnit == null)
-            {
-                getWorkingUnit = new WorkingUnit
-                {
-                    From = workingUnit.From,
-                    To = workingUnit.To
-                };
-                context.WorkingUnits.Add(getWorkingUnit);
-            }
-
-            availability.WorkingUnit = getWorkingUnit;
+            var result = await UpdateAvailabilityPrivate(worker, form);
             await context.SaveChangesAsync();
-
-            var result = new GetAvailabilityDto
-            {
-                Date = availability.Date,
-                From = getWorkingUnit.From,
-                To = getWorkingUnit.To,
-                WorkerInternalNumber = worker.WorkerInternalNumber,
-                WorkerName = $"{worker.FirstName} {worker.LastName}",
-                WorkerPosition = worker.Position?.Name ?? "not specified"
-            };
             return result;
         }
 
@@ -159,8 +129,8 @@ namespace Worker_Schedule_Web_Api.Services
             var result = new GetAvailabilityDto
             {
                 Date = date,
-                From = from,
-                To = to,
+                From = workingUnit.From,
+                To = workingUnit.To,
                 WorkerInternalNumber = worker.WorkerInternalNumber,
                 WorkerName = $"{worker.FirstName} {worker.LastName}",
                 WorkerPosition = worker.Position?.Name ?? "not specified"
@@ -180,7 +150,7 @@ namespace Worker_Schedule_Web_Api.Services
             return worker;
         }
 
-        public async Task<List<GetAvailabilityDto>> CreateMonthAvailability(CreateAvailabilityDto[] form, int year, int month)
+        public async Task<List<GetAvailabilityDto>> CreateMonthAvailability(CreateUpdateAvailabilityDto[] form, int year, int month)
         {
             var result = new List<GetAvailabilityDto>();
             var worker = await GetWorker();
@@ -193,14 +163,66 @@ namespace Worker_Schedule_Web_Api.Services
 
             foreach (var availability in form)
             {
-                if (availability.Date.Year != year || availability.Date.Month != month) throw new InvalidAvailabilityDateException(availability.Date);
-                if (existingDates.Contains(availability.Date)) throw new AvailabilityExistsException(availability.Date);
+                if (availability.Date.Year != year || availability.Date.Month != month) 
+                    throw new InvalidAvailabilityDateException(availability.Date);
+                if (existingDates.Contains(availability.Date)) 
+                    throw new AvailabilityExistsException(availability.Date);
 
                 result.Add(await SetAvailability(worker, availability.Date, availability.From, availability.To));
             }
 
             await context.SaveChangesAsync();
 
+            return result;
+        }
+
+        public async Task<List<GetAvailabilityDto>> UpdateMonthAvailability(CreateUpdateAvailabilityDto[] form, int year, int month)
+        {
+            var worker = await GetWorker();
+            var result = new List<GetAvailabilityDto>();
+            foreach (var item in form)
+            {
+                if (item.Date.Year != year || item.Date.Month != month) throw new InvalidAvailabilityDateException(item.Date);
+                var updated = await UpdateAvailabilityPrivate(worker, item);
+                result.Add(updated);
+            }
+            await context.SaveChangesAsync();
+            return result;
+        }
+
+        private async Task<GetAvailabilityDto> UpdateAvailabilityPrivate(Worker worker, CreateUpdateAvailabilityDto form)
+        {
+            var availability = await context.Availabilities
+                .Include(a => a.WorkingUnit)
+                .FirstOrDefaultAsync(a => a.Date == form.Date && a.WorkerId == worker.Id);
+            if (availability == null)
+            {
+                throw new AvailabilityNotFoundException();
+            }
+
+            var getWorkingUnit = await context.WorkingUnits
+                .FirstOrDefaultAsync(wu => wu.From == form.From && wu.To == form.To);
+            if (getWorkingUnit == null)
+            {
+                getWorkingUnit = new WorkingUnit
+                {
+                    From = form.From,
+                    To = form.To
+                };
+                context.WorkingUnits.Add(getWorkingUnit);
+            }
+
+            availability.WorkingUnit = getWorkingUnit;
+
+            var result = new GetAvailabilityDto
+            {
+                Date = availability.Date,
+                From = getWorkingUnit.From,
+                To = getWorkingUnit.To,
+                WorkerInternalNumber = worker.WorkerInternalNumber,
+                WorkerName = $"{worker.FirstName} {worker.LastName}",
+                WorkerPosition = worker.Position?.Name ?? "not specified"
+            };
             return result;
         }
     }

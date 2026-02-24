@@ -33,7 +33,7 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<GetAvailabilityDto>> CreateAvailability(CreateAvailabilityDto form)
+        public async Task<ActionResult<GetAvailabilityDto>> CreateAvailability(CreateUpdateAvailabilityDto form)
         {
             var result = await availabilityService.CreateAvailability(form);
             return CreatedAtAction(nameof(GetAvailability), new { date = result.Date }, result);
@@ -41,17 +41,24 @@ namespace Worker_Schedule_Web_Api.Controllers
 
         [HttpPost]
         [Route("month/{year:int}/{month:int}")]
-        public async Task<ActionResult<List<GetAvailabilityDto>>> CreateAvailability(CreateAvailabilityDto[] form, int year, int month)
+        public async Task<ActionResult<List<GetAvailabilityDto>>> CreateMonthAvailability(CreateUpdateAvailabilityDto[] form, int year, int month)
         {
             var result = await availabilityService.CreateMonthAvailability(form, year, month);
             return result;
         }
 
         [HttpPut]
-        [Route("{date}")]
-        public async Task<ActionResult<GetAvailabilityDto>> UpdateAvailability([FromRoute] DateOnly date, UpdateAvailabilityDto workingUnit)
+        public async Task<ActionResult<GetAvailabilityDto>> UpdateAvailability(CreateUpdateAvailabilityDto form)
         {
-            var result = await availabilityService.UpdateAvailability(date, workingUnit);
+            var result = await availabilityService.UpdateAvailability(form);
+            return result;
+        }
+
+        [HttpPut]
+        [Route("month/{year:int}/{month:int}")]
+        public async Task<ActionResult<List<GetAvailabilityDto>>> UpdateMonthAvailability(CreateUpdateAvailabilityDto[] form, int year, int month)
+        {
+            var result = await availabilityService.UpdateMonthAvailability(form, year, month);
             return result;
         }
 
