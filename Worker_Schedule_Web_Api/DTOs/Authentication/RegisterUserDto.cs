@@ -14,6 +14,10 @@ namespace Worker_Schedule_Web_Api.DTOs.Authentication
         [Required(ErrorMessage = "Last name is required!")]
         public string LastName { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Employment Percentage is required!")]
+        [Range(1, 100)]
+        public int EmploymentPercentage { get; set; }
+
         public int StoreId { get; set; } = 16614;
         public Guid PositionId { get; set; }
 

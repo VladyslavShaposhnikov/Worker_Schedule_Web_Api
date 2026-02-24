@@ -99,6 +99,7 @@ namespace Worker_Schedule_Web_Api.Controllers
                         WorkerInternalNumber = registerUserDto.WorkerInternalNumber,
                         FirstName = registerUserDto.FirstName,
                         LastName = registerUserDto.LastName,
+                        EmploymentPercentage = registerUserDto.EmploymentPercentage,
                         StoreId = registerUserDto.StoreId,
                         PositionId = registerUserDto.PositionId,
                         AppUser = user
