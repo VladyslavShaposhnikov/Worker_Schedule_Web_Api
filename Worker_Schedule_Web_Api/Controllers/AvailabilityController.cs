@@ -1,11 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using Worker_Schedule_Web_Api.Data;
 using Worker_Schedule_Web_Api.DTOs.Availability;
-using Worker_Schedule_Web_Api.Models.Domain;
 using Worker_Schedule_Web_Api.Models.Identity;
 using Worker_Schedule_Web_Api.Services.Interfaces;
 
