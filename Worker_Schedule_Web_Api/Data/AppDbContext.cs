@@ -13,6 +13,7 @@ namespace Worker_Schedule_Web_Api.Data
         public DbSet<Address> Addresses => Set<Address>();
         public DbSet<Schedule> Schedules => Set<Schedule>();
         public DbSet<Availability> Availabilities => Set<Availability>();
+        public DbSet<ShiftDemand> ShiftDemands => Set<ShiftDemand>();
         public DbSet<WorkingUnit> WorkingUnits => Set<WorkingUnit>();
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -29,6 +30,7 @@ namespace Worker_Schedule_Web_Api.Data
             builder.ApplyConfiguration(new AvailabilityConfiguration());
             builder.ApplyConfiguration(new PositionConfiguration());
             builder.ApplyConfiguration(new ScheduleConfiguration());
+            builder.ApplyConfiguration(new ShiftDemandConfiguration());
             builder.ApplyConfiguration(new StoreConfiguration());
             builder.ApplyConfiguration(new WorkingUnitConfiguration());
         }

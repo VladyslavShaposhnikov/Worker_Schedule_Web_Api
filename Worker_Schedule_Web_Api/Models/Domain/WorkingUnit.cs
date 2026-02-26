@@ -7,5 +7,6 @@
         public TimeOnly To { get; set; }
         public List<Schedule> Schedules { get; set; } = new();
         public List<Availability> Availabilities { get; set; } = new();
+        public List<ShiftDemand> ShiftDemands { get; set; } = new();
     }
 }
