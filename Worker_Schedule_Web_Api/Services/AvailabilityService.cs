@@ -15,7 +15,7 @@ namespace Worker_Schedule_Web_Api.Services
             var worker = await GetWorker();
             var isDateExist = await context.Availabilities.AnyAsync(a => a.Date == form.Date && a.WorkerId == worker.Id);
 
-            if (isDateExist) throw new AvailabilityExistsException(form.Date);
+            if (isDateExist) throw new DateAlreadyExistsException(form.Date);
 
             var result = await SetAvailability(worker, form.Date, form.From, form.To);
             await context.SaveChangesAsync();
@@ -85,7 +85,7 @@ namespace Worker_Schedule_Web_Api.Services
             var worker = await GetWorker();
 
             var isDateExist = await context.Availabilities.AnyAsync(a => a.Date == date && a.WorkerId == worker.Id);
-            if (isDateExist) throw new AvailabilityExistsException(date);
+            if (isDateExist) throw new DateAlreadyExistsException(date);
 
             var result = await SetAvailability(worker, date, new TimeOnly(0, 0), new TimeOnly(23, 59));
             await context.SaveChangesAsync();
@@ -166,7 +166,7 @@ namespace Worker_Schedule_Web_Api.Services
                 if (availability.Date.Year != year || availability.Date.Month != month) 
                     throw new InvalidAvailabilityDateException(availability.Date);
                 if (existingDates.Contains(availability.Date)) 
-                    throw new AvailabilityExistsException(availability.Date);
+                    throw new DateAlreadyExistsException(availability.Date);
 
                 result.Add(await SetAvailability(worker, availability.Date, availability.From, availability.To));
             }
