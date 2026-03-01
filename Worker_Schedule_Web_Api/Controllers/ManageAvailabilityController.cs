@@ -15,18 +15,10 @@ namespace Worker_Schedule_Web_Api.Controllers
     {
         [HttpPost]
         [Route("create-day-shedule")]
-        public async Task<ActionResult<List<ScheduleDto>>> CreateDayAvailability(DateOnly date)
+        public async Task<ActionResult<List<ScheduleDto>>> CreateDaySchedule(DateOnly date)
         {
-            var result = await manageAvailabilityService.CreateDayAvailability(date);
+            var result = await manageAvailabilityService.CreateDaySchedule(date);
             return StatusCode(201, result);
-        }
-
-        [HttpGet]
-        [Route("shift-demand")]
-        public async Task<ActionResult<List<ShiftDemandDto>>> GetShiftDemand(DateOnly date)
-        {
-            var result = await manageAvailabilityService.GetShiftDemand(date);
-            return result;
         }
 
         [HttpGet]
@@ -35,22 +27,6 @@ namespace Worker_Schedule_Web_Api.Controllers
         {
             var result = await manageAvailabilityService.GetAllAvailabilities(date);
             return result;
-        }
-
-        [HttpPost]
-        [Route("create-shift-demand")]
-        public async Task<ActionResult<List<ShiftDemandDto>>> CreateShiftDemand(List<ShiftDemandDto> form)
-        {
-            var result = await manageAvailabilityService.CreateShiftDemand(form);
-            return StatusCode(201, result);
-        }
-
-        [HttpDelete]
-        [Route("delete-shift-demand")]
-        public async Task<ActionResult> DeleteShiftDemand(DateOnly date)
-        {
-            await manageAvailabilityService.DeleteShiftDemand(date);
-            return NoContent();
         }
     }
 }

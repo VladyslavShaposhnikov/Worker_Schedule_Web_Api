@@ -63,10 +63,10 @@ namespace Worker_Schedule_Web_Api.Services
 
                 foreach (var worker in matchingWorkers)
                 {
-                    logger.LogInformation("Worker has {Hours} for {Date}", worker.HoursLeft, date);
-
                     var isContain = result.Any(r => r.WorkerInternalNumber == worker.WorkerInternalNumber && r.Date == worker.Date);
                     if (isContain) continue;
+
+                    logger.LogInformation("Worker has {Hours} for {Date}", worker.HoursLeft, date);
 
                     var localFrom = worker.From;
                     var localTo = worker.To;

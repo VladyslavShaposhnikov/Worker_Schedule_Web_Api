@@ -29,6 +29,7 @@ namespace Worker_Schedule_Web_Api
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
             builder.Services.AddScoped<IManageAvailabilityService, ManageAvailabilityService>();
             builder.Services.AddScoped<IScheduler, SchedulerService>();
+            builder.Services.AddScoped<IShiftDemandService, ShiftDemandService>();
 
             builder.Services.AddDbContext<AppDbContext>();
             builder.Services.AddIdentityCore<AppUser>()
@@ -89,7 +90,7 @@ namespace Worker_Schedule_Web_Api
                 app.MapScalarApiReference();
             }
 
-            app.UseMiddleware<GlobalExceptionMiddleware>();
+            //app.UseMiddleware<GlobalExceptionMiddleware>();
 
             // for testing purposes only!!!
             app.Use(async (context, next) =>
