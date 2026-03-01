@@ -1,4 +1,4 @@
-﻿namespace Worker_Schedule_Web_Api.DTOs.ManageAvailability
+﻿namespace Worker_Schedule_Web_Api.DTOs.ShiftDemand
 {
     public class ShiftDemandDto
     {

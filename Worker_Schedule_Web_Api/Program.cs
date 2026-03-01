@@ -90,7 +90,7 @@ namespace Worker_Schedule_Web_Api
                 app.MapScalarApiReference();
             }
 
-            //app.UseMiddleware<GlobalExceptionMiddleware>();
+            app.UseMiddleware<GlobalExceptionMiddleware>();
 
             // for testing purposes only!!!
             app.Use(async (context, next) =>

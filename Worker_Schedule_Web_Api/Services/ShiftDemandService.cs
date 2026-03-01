@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Worker_Schedule_Web_Api.Data;
-using Worker_Schedule_Web_Api.DTOs.ManageAvailability;
+using Worker_Schedule_Web_Api.DTOs.ShiftDemand;
 using Worker_Schedule_Web_Api.Exceptions;
 using Worker_Schedule_Web_Api.Models.Domain;
 using Worker_Schedule_Web_Api.Services.Interfaces;
@@ -26,15 +26,6 @@ namespace Worker_Schedule_Web_Api.Services
         public async Task<List<ShiftDemandDto>> CreateShiftDemand(List<ShiftDemandDto> form)
         {
             var result = new List<ShiftDemandDto>();
-
-            var dates = form.Select(f => f.Date).ToList();
-
-            var shiftDemandsDates = await context.ShiftDemands
-                .Where(sd => dates.Contains(sd.Date))
-                .Select(sd => sd.Date)
-                .FirstOrDefaultAsync();
-
-            if (shiftDemandsDates != default) throw new DateAlreadyExistsException(shiftDemandsDates);
 
             var units = await context.WorkingUnits.ToListAsync();
 

@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Worker_Schedule_Web_Api.DTOs.ManageAvailability;
+using Worker_Schedule_Web_Api.DTOs.ShiftDemand;
 
 namespace Worker_Schedule_Web_Api.Services.Interfaces
 {
