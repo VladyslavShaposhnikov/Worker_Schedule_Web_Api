@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Worker_Schedule_Web_Api.DTOs.ShiftDemand;
+using Worker_Schedule_Web_Api.Models.Identity;
 using Worker_Schedule_Web_Api.Services;
 using Worker_Schedule_Web_Api.Services.Interfaces;
 
@@ -8,7 +9,7 @@ namespace Worker_Schedule_Web_Api.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
+    [Authorize(Roles = AppRoles.Manager)]
     public class ShiftDemandController(IShiftDemandService shiftDemandService) : ControllerBase
     {
         /// <summary>
