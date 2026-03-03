@@ -10,6 +10,66 @@ namespace Worker_Schedule_Web_Api.Services
 {
     public class AvailabilityService(AppDbContext context, ICurrentUserService currentUser) : IAvailabilityService
     {
+        public async Task<List<GetAvailabilityDto>> Availabilities(AvailabilityFilterDto filter)
+        {
+            var query = context.Availabilities
+                .Include(a => a.Worker)
+                .ThenInclude(w => w.Position)
+                .Include(a => a.WorkingUnit)
+                .AsQueryable();
+
+            if (filter.startDate != null)
+            {
+                query = query.Where(a => a.Date >= filter.startDate);
+            }
+            if (filter.endDate != null)
+            {
+                query = query.Where(a => a.Date <= filter.endDate);
+            }
+
+            if (filter.workerInternalNumber != null)
+            {
+                query = query.Where(a => a.Worker.WorkerInternalNumber == filter.workerInternalNumber);
+            }
+
+            if (filter.workerPosition != null)
+            {
+                query = query.Where(a => a.Worker.Position.Name.ToLower().Contains(filter.workerPosition.ToLower()));
+            }
+
+            if (filter.workerName != null)
+            {
+                query = query.Where(a =>
+                a.Worker.FirstName.ToLower().Contains(filter.workerName.ToLower()) ||
+                a.Worker.LastName.ToLower().Contains(filter.workerName.ToLower())
+                );
+            }
+
+            if (filter.from != null)
+            {
+                query = query.Where(a => a.WorkingUnit.From >= filter.from);
+            }
+            if (filter.to != null)
+            {
+                query = query.Where(a => a.WorkingUnit.To <= filter.to);
+            }
+
+            return await query.Select(a =>
+                new GetAvailabilityDto
+                {
+                    WorkerName = $"{a.Worker.FirstName} {a.Worker.LastName}",
+                    WorkerInternalNumber = a.Worker.WorkerInternalNumber,
+                    WorkerPosition = a.Worker.Position.Name,
+                    Date = a.Date,
+                    From = a.WorkingUnit.From,
+                    To = a.WorkingUnit.To
+                })
+                .OrderBy(a => a.Date)
+                .ThenBy(a => a.WorkerInternalNumber)
+                .Skip((filter.page - 1) * filter.pageSize)
+                .Take(filter.pageSize)
+                .ToListAsync();
+        }
         public async Task<GetAvailabilityDto> CreateAvailability(CreateUpdateAvailabilityDto form)
         {
             var worker = await GetWorker();

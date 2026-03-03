@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Worker_Schedule_Web_Api.DTOs.Availability;
 using Worker_Schedule_Web_Api.Models.Identity;
+using Worker_Schedule_Web_Api.Services;
 using Worker_Schedule_Web_Api.Services.Interfaces;
 
 namespace Worker_Schedule_Web_Api.Controllers
@@ -12,11 +13,11 @@ namespace Worker_Schedule_Web_Api.Controllers
     public class AvailabilityController(IAvailabilityService availabilityService) : ControllerBase
     {
         [HttpGet]
-        [Route("month/{year:int}/{month:int}")]
-        public async Task<ActionResult<List<GetAvailabilityDto>>> GetMonthAvailability([FromRoute] int year,[FromRoute] int month)
+        [Route("availabilities")]
+        public async Task<ActionResult<List<GetAvailabilityDto>>> Availabilities([FromQuery] AvailabilityFilterDto filters)
         {
-            var resultList = await availabilityService.GetMonthAvailability(year, month);
-            return resultList;
+            var result = await availabilityService.Availabilities(filters);
+            return result;
         }
 
         [HttpGet]

@@ -1,6 +1,6 @@
 ﻿using Worker_Schedule_Web_Api.Models.Domain;
 
-namespace Worker_Schedule_Web_Api.DTOs.ManageAvailability
+namespace Worker_Schedule_Web_Api.DTOs.Schedule
 {
     public class ScheduleDto
     {

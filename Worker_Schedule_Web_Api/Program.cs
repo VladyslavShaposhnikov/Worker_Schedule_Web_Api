@@ -27,9 +27,9 @@ namespace Worker_Schedule_Web_Api
 
             builder.Services.AddScoped<IAvailabilityService, AvailabilityService>();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-            builder.Services.AddScoped<IManageAvailabilityService, ManageAvailabilityService>();
             builder.Services.AddScoped<IScheduler, SchedulerService>();
             builder.Services.AddScoped<IShiftDemandService, ShiftDemandService>();
+            builder.Services.AddScoped<ISchedulingAlgorithm, SchedulingAlgorithm>();
 
             builder.Services.AddDbContext<AppDbContext>();
             builder.Services.AddIdentityCore<AppUser>()
