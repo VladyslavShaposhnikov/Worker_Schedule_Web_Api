@@ -26,5 +26,35 @@ namespace Worker_Schedule_Web_Api.Controllers
             var result = await scheduler.CreateMonthSchedule(year, month);
             return StatusCode(201, result);
         }
+
+        [HttpPost]
+        [Route("add-single-worker")]
+        public async Task<ActionResult<List<ScheduleDto>>> AddSingleWorker(ScheduleWorkerDto form)
+        {
+            var result = await scheduler.AddSingleWorker(form);
+            return StatusCode(201, result);
+        }
+
+        [HttpGet]
+        public async Task<List<ScheduleDto>> GetSchedule([FromQuery] ScheduleFilterDto filter)
+        {
+            var result = await scheduler.GetSchedules(filter);
+            return result;
+        }
+
+        [HttpDelete]
+        [Route("{scheduleId:guid}")]
+        public async Task<ActionResult> DeleteScheduleById([FromRoute]Guid scheduleId)
+        {
+            await scheduler.DeleteScheduleShift(scheduleId);
+            return NoContent();
+        }
+
+        [HttpDelete]
+        public async Task<ActionResult> DeleteSchedule(DateOnly date)
+        {
+            await scheduler.DeleteDaySchedule(date);
+            return NoContent();
+        }
     }
 }

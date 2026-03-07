@@ -17,7 +17,7 @@ namespace Worker_Schedule_Web_Api.Data
                 .HasForeignKey(s => s.WorkingUnitId);
             builder.HasOne(s => s.Worker)
                 .WithMany(w => w.Schedules)
-                .HasForeignKey(s => s.WorkingUnitId);
+                .HasForeignKey(s => s.WorkerId);
         }
     }
 }

@@ -9,6 +9,6 @@ namespace Worker_Schedule_Web_Api.Models.Domain
         public Guid WorkingUnitId { get; set; }
         public WorkingUnit? WorkingUnit { get; set; }
         public Guid WorkerId { get; set; }
-        public Worker? Worker { get; set; } = new();
+        public Worker? Worker { get; set; }
     }
 }

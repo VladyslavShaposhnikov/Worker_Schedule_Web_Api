@@ -6,5 +6,9 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
     {
         Task<List<ScheduleDto>> CreateDaySchedule(DateOnly date);
         Task<List<ScheduleDto>> CreateMonthSchedule(int year, int month);
+        Task<List<ScheduleDto>> AddSingleWorker(ScheduleWorkerDto form);
+        Task<List<ScheduleDto>> GetSchedules(ScheduleFilterDto filter);
+        Task DeleteDaySchedule(DateOnly date);
+        Task DeleteScheduleShift(Guid scheduleId);
     }
 }
