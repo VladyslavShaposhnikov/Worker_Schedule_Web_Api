@@ -30,6 +30,7 @@ namespace Worker_Schedule_Web_Api
             builder.Services.AddScoped<IScheduler, SchedulerService>();
             builder.Services.AddScoped<IShiftDemandService, ShiftDemandService>();
             builder.Services.AddScoped<ISchedulingAlgorithm, SchedulingAlgorithm>();
+            builder.Services.AddScoped<IScheduleMonthAlgorithm, ScheduleMonthAlgorithm>();
 
             builder.Services.AddDbContext<AppDbContext>();
             builder.Services.AddIdentityCore<AppUser>()

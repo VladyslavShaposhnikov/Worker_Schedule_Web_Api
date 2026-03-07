@@ -14,7 +14,7 @@ namespace Worker_Schedule_Web_Api.Services
                 var to30 = demand.To.AddMinutes(-30);
                 var matchingWorkers = workers
                     .Where(w => w.From <= from30 && w.To >= to30 && !alreadyAssignedForDay.Contains(w.WorkerId))
-                    .OrderByDescending(w => w.Hours)
+                    .OrderBy(w => w.Hours)
                     .ThenBy(w => w.To - w.From)
                     .Take(demand.WorkersNeeded)
                     .ToList();
