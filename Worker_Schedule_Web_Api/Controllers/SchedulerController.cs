@@ -7,21 +7,21 @@ using Worker_Schedule_Web_Api.Services.Interfaces;
 namespace Worker_Schedule_Web_Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/schedules")]
     [Authorize(Roles = AppRoles.Manager)]
     public class SchedulerController(IScheduler scheduler) : ControllerBase
     {
         [HttpPost]
-        [Route("create-day-shedule")]
-        public async Task<ActionResult<List<ScheduleDto>>> CreateDaySchedule(DateOnly date)
+        [Route("{date}")]
+        public async Task<ActionResult<List<ScheduleDto>>> CreateDaySchedule([FromRoute] DateOnly date)
         {
             var result = await scheduler.CreateDaySchedule(date);
             return StatusCode(201, result);
         }
 
         [HttpPost]
-        [Route("create-month-shedule/{year:int}/{month:int}")]
-        public async Task<ActionResult<List<ScheduleDto>>> CreateMonthSchedule(int year, int month)
+        [Route("{year:int}/{month:int}")]
+        public async Task<ActionResult<List<ScheduleDto>>> CreateMonthSchedule([FromRoute] int year, [FromRoute] int month)
         {
             var result = await scheduler.CreateMonthSchedule(year, month);
             return StatusCode(201, result);
@@ -51,7 +51,8 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpDelete]
-        public async Task<ActionResult> DeleteSchedule(DateOnly date)
+        [Route("{date}")]
+        public async Task<ActionResult> DeleteSchedule([FromRoute] DateOnly date)
         {
             await scheduler.DeleteDaySchedule(date);
             return NoContent();

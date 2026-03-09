@@ -51,13 +51,15 @@ namespace Worker_Schedule_Web_Api.Services
                 .Select(s => s.WorkerId)
                 .ToHashSet();
 
+            var workingUnits = await context.WorkingUnits.ToListAsync();
+
             var result = new List<ScheduleDto>();
 
             var calculationResult = schedulingAlgorithm.Calculate(demands, workers, hashWorkersSet);
 
             foreach (var schedule in calculationResult)
             {
-                var workingUnit = await CreateWorkingUnitIfNotExists(schedule.From, schedule.To);
+                var workingUnit = CreateWorkingUnitIfNotExists(workingUnits, schedule.From, schedule.To);
 
                 context.Schedules.Add(new Schedule
                 {
@@ -100,13 +102,15 @@ namespace Worker_Schedule_Web_Api.Services
                 .Where(a => a.Date.Year == year && a.Date.Month == month)
                 .ToListAsync();
 
+            var workingUnits = await context.WorkingUnits.ToListAsync();
+
             var result = scheduleMonthAlgorithm.Calculate(demands, workers, schedules, year, month);
 
             var resultSchedules = new List<ScheduleDto>();
 
             foreach (var schedule in result)
             {
-                var workingUnit = await CreateWorkingUnitIfNotExists(schedule.From, schedule.To);
+                var workingUnit = CreateWorkingUnitIfNotExists(workingUnits, schedule.From, schedule.To);
 
                 context.Schedules.Add(new Schedule
                 {
@@ -138,7 +142,12 @@ namespace Worker_Schedule_Web_Api.Services
 
             if (worker == null) throw new WorkerNotFoundException(form.WorkerInternalNumber);
 
-            var workingUnit = await CreateWorkingUnitIfNotExists(form.From, form.To);
+            var workingUnits = await context
+                .WorkingUnits
+                .Where(wu => wu.From == form.From && wu.To == form.To)
+                .ToListAsync();
+
+            var workingUnit = CreateWorkingUnitIfNotExists(workingUnits, form.From, form.To);
 
             var schedule = new Schedule
             {
@@ -168,11 +177,7 @@ namespace Worker_Schedule_Web_Api.Services
 
         public async Task<List<ScheduleDto>> GetSchedules(ScheduleFilterDto filter)
         {
-            var schedules = context
-                .Schedules
-                .Include(s => s.WorkingUnit)
-                .Include(s => s.Worker)
-                .AsQueryable();
+            var schedules = context.Schedules.AsQueryable();
 
             if (filter.startDate.HasValue)
             {
@@ -189,10 +194,8 @@ namespace Worker_Schedule_Web_Api.Services
             if (!string.IsNullOrEmpty(filter.workerName))
             {
                 schedules = schedules
-                    .Where(s => 
-                        $"{s.Worker.FirstName} {s.Worker.LastName}"
-                        .ToLower()
-                        .Contains(filter.workerName.ToLower()));
+                    .Where(s => s.Worker.FirstName.Contains(filter.workerName) ||
+                    s.Worker.LastName.Contains(filter.workerName));
             }
 
             var result = await schedules
@@ -227,13 +230,11 @@ namespace Worker_Schedule_Web_Api.Services
                 .ExecuteDeleteAsync();
         }
 
-        private async Task<WorkingUnit> CreateWorkingUnitIfNotExists(TimeOnly from, TimeOnly to)
+        private WorkingUnit CreateWorkingUnitIfNotExists(List<WorkingUnit> workingUnits, TimeOnly from, TimeOnly to)
         {
-            var workingUnits = await context
-                .WorkingUnits
-                .ToListAsync();
+            var workingUnit = workingUnits
+                .FirstOrDefault(wu => wu.From == from && wu.To == to);
 
-            var workingUnit = workingUnits.FirstOrDefault(wu => wu.From == from && wu.To == to);
             if (workingUnit == null)
             {
                 workingUnit = new WorkingUnit
