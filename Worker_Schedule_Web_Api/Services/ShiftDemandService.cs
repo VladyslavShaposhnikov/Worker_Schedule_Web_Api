@@ -62,7 +62,7 @@ namespace Worker_Schedule_Web_Api.Services
             var startDate = new DateOnly(year, month, 1);
             var endDate = new DateOnly(year, month, DateTime.DaysInMonth(year, month));
 
-            var isAlreadyHaveShiftDemand = await context.ShiftDemands.Where(sd => sd.Date >= startDate && sd.Date <= endDate).AnyAsync();
+            var isAlreadyHaveShiftDemand = await context.ShiftDemands.AnyAsync(sd => sd.Date >= startDate && sd.Date <= endDate);
 
             if (isAlreadyHaveShiftDemand) throw new MonthAlreadyHasShiftDemandsException();
 

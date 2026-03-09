@@ -8,7 +8,7 @@ using Worker_Schedule_Web_Api.Services.Interfaces;
 namespace Worker_Schedule_Web_Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/shift-demands")]
     [Authorize(Roles = AppRoles.Manager)]
     public class ShiftDemandController(IShiftDemandService shiftDemandService) : ControllerBase
     {
@@ -16,8 +16,8 @@ namespace Worker_Schedule_Web_Api.Controllers
         /// Retrieves the list of shift demands for a specific date.
         /// </summary>
         [HttpGet]
-        [Route("shift-demand")]
-        public async Task<ActionResult<List<ShiftDemandDto>>> GetShiftDemand(DateOnly date)
+        [Route("{date}")]
+        public async Task<ActionResult<List<ShiftDemandDto>>> GetShiftDemand([FromRoute] DateOnly date)
         {
             var result = await shiftDemandService.GetShiftDemand(date);
             return result;
@@ -27,7 +27,6 @@ namespace Worker_Schedule_Web_Api.Controllers
         /// Batch creates/add shift demands.
         /// </summary>
         [HttpPost]
-        [Route("create-shift-demand")]
         public async Task<ActionResult<List<ShiftDemandDto>>> CreateShiftDemand(List<ShiftDemandDto> form)
         {
             var result = await shiftDemandService.CreateShiftDemand(form);
@@ -38,8 +37,8 @@ namespace Worker_Schedule_Web_Api.Controllers
         /// Batch creates default shift demands for a specific month. The default shift demands are based on the default shift template and are created for each day of the specified month.
         /// </summary>
         [HttpPost]
-        [Route("default-month/{year:int}/{month:int}")]
-        public async Task<ActionResult<List<ShiftDemandDto>>> SetDefaultShiftsMonth(int year, int month)
+        [Route("defaults/{year:int}/{month:int}")]
+        public async Task<ActionResult<List<ShiftDemandDto>>> SetDefaultShiftsMonth([FromRoute] int year, [FromRoute] int month)
         {
             var result = await shiftDemandService.SetDefaultShiftsMonth(year, month);
             return StatusCode(201, result);
@@ -49,8 +48,8 @@ namespace Worker_Schedule_Web_Api.Controllers
         /// Deletes all shift demands for a specific date.
         /// </summary>
         [HttpDelete]
-        [Route("delete-shift-demand")]
-        public async Task<ActionResult> DeleteShiftDemand(DateOnly date)
+        [Route("{date}")]
+        public async Task<ActionResult> DeleteShiftDemand([FromRoute] DateOnly date)
         {
             await shiftDemandService.DeleteShiftDemand(date);
             return NoContent();
