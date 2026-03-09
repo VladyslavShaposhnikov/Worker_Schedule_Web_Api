@@ -8,12 +8,11 @@ using Worker_Schedule_Web_Api.Services.Interfaces;
 namespace Worker_Schedule_Web_Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/availabilities")]
     [Authorize(Roles = $"{AppRoles.Worker},{AppRoles.Manager}")]
     public class AvailabilityController(IAvailabilityService availabilityService) : ControllerBase
     {
         [HttpGet]
-        [Route("availabilities")]
         public async Task<ActionResult<List<GetAvailabilityDto>>> Availabilities([FromQuery] AvailabilityFilterDto filters)
         {
             var result = await availabilityService.Availabilities(filters);
@@ -36,8 +35,8 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpPost]
-        [Route("month/{year:int}/{month:int}")]
-        public async Task<ActionResult<List<GetAvailabilityDto>>> CreateMonthAvailability(CreateUpdateAvailabilityDto[] form, int year, int month)
+        [Route("bulk/{year}/{month}")]
+        public async Task<ActionResult<List<GetAvailabilityDto>>> CreateMonthAvailability(CreateUpdateAvailabilityDto[] form,[FromRoute] int year,[FromRoute] int month)
         {
             var result = await availabilityService.CreateMonthAvailability(form, year, month);
             return result;
@@ -51,15 +50,15 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpPut]
-        [Route("month/{year:int}/{month:int}")]
-        public async Task<ActionResult<List<GetAvailabilityDto>>> UpdateMonthAvailability(CreateUpdateAvailabilityDto[] form, int year, int month)
+        [Route("bulk/{year}/{month}")]
+        public async Task<ActionResult<List<GetAvailabilityDto>>> UpdateMonthAvailability(CreateUpdateAvailabilityDto[] form,[FromRoute] int year,[FromRoute] int month)
         {
             var result = await availabilityService.UpdateMonthAvailability(form, year, month);
             return result;
         }
 
         [HttpPost]
-        [Route("{date}/full")]
+        [Route("full-day/{date}")]
         public async Task<ActionResult<GetAvailabilityDto>> SetFullAvailability([FromRoute] DateOnly date)
         {
             var result = await availabilityService.SetFullAvailability(date);
@@ -67,7 +66,7 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpDelete]
-        [Route("{date}/day-off")]
+        [Route("day-off/{date}")]
         public async Task<ActionResult<GetAvailabilityDto>> DayOffAvailability([FromRoute] DateOnly date)
         {
             await availabilityService.DayOffAvailability(date);

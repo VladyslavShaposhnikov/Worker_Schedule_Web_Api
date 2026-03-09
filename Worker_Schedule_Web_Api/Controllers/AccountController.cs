@@ -6,7 +6,7 @@ using Worker_Schedule_Web_Api.Services.Interfaces;
 namespace Worker_Schedule_Web_Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api")]
     public class AccountController(IAuthService authService) : ControllerBase
     {
         [HttpPost]
