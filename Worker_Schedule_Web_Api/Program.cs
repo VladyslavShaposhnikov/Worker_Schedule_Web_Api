@@ -1,16 +1,9 @@
 
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Worker_Schedule_Web_Api.Data;
-using Worker_Schedule_Web_Api.Models.Identity;
 using Scalar.AspNetCore;
-using System.Threading.Tasks;
-using Worker_Schedule_Web_Api.Services.Interfaces;
-using Worker_Schedule_Web_Api.Services;
+using Worker_Schedule_Web_Api.Extensions;
 using Worker_Schedule_Web_Api.Middleware;
+using Worker_Schedule_Web_Api.Models.Identity;
 
 namespace Worker_Schedule_Web_Api
 {
@@ -22,52 +15,7 @@ namespace Worker_Schedule_Web_Api
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
-            builder.Services.AddHttpContextAccessor();
-
-            builder.Services.AddScoped<IAvailabilityService, AvailabilityService>();
-            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-            builder.Services.AddScoped<IScheduler, SchedulerService>();
-            builder.Services.AddScoped<IShiftDemandService, ShiftDemandService>();
-            builder.Services.AddScoped<ISchedulingAlgorithm, SchedulingAlgorithm>();
-            builder.Services.AddScoped<IScheduleMonthAlgorithm, ScheduleMonthAlgorithm>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
-
-            builder.Services.AddDbContext<AppDbContext>();
-            builder.Services.AddIdentityCore<AppUser>()
-                .AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<AppDbContext>()
-                .AddDefaultTokenProviders();
-
-            builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
-            {
-                var secret = builder.Configuration["JwtConfig:Secret"];
-                var issuer = builder.Configuration["JwtConfig:ValidIssuer"];
-                var audience = builder.Configuration["JwtConfig:ValidAudiences"];
-                if (secret is null || issuer is null || audience is null)
-                {
-                    throw new ApplicationException("Jwt is not set in the configuration");
-                }
-                options.SaveToken = true;
-                options.RequireHttpsMetadata = false;
-                options.TokenValidationParameters = new
-                TokenValidationParameters()
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidAudience = audience,
-                    ValidIssuer = issuer,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
-                };
-            });
-
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
+            builder.Services.AddLifetimeServices(builder.Configuration);
 
             var app = builder.Build();
 
