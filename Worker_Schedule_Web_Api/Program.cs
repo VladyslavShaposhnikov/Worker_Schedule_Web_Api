@@ -31,6 +31,10 @@ namespace Worker_Schedule_Web_Api
                 {
                     await roleManager.CreateAsync(new IdentityRole(AppRoles.Manager));
                 }
+                if (!await roleManager.RoleExistsAsync(AppRoles.VisualMerchandiser))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(AppRoles.VisualMerchandiser));
+                }
             }
 
             // Configure the HTTP request pipeline.

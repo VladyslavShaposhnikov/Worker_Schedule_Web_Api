@@ -8,7 +8,7 @@ namespace Worker_Schedule_Web_Api.Controllers
 {
     [ApiController]
     [Route("api/schedules")]
-    [Authorize(Roles = AppRoles.Manager)]
+    [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
     public class SchedulerController(IScheduler scheduler) : ControllerBase
     {
         [HttpPost]

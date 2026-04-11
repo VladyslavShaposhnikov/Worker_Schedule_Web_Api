@@ -4,5 +4,6 @@
     {
         public const string Worker = "Worker";
         public const string Manager = "Manager";
+        public const string VisualMerchandiser = "Visual merchandiser";
     }
 }

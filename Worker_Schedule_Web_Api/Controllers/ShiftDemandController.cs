@@ -9,7 +9,7 @@ namespace Worker_Schedule_Web_Api.Controllers
 {
     [ApiController]
     [Route("api/shift-demands")]
-    [Authorize(Roles = AppRoles.Manager)]
+    [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
     public class ShiftDemandController(IShiftDemandService shiftDemandService) : ControllerBase
     {
         /// <summary>

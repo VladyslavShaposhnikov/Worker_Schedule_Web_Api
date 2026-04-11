@@ -9,7 +9,7 @@ namespace Worker_Schedule_Web_Api.Controllers
 {
     [ApiController]
     [Route("api/availabilities")]
-    [Authorize(Roles = $"{AppRoles.Worker},{AppRoles.Manager}")]
+    [Authorize(Roles = $"{AppRoles.Worker},{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
     public class AvailabilityController(IAvailabilityService availabilityService) : ControllerBase
     {
         [HttpGet]

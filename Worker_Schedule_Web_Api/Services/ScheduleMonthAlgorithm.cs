@@ -44,7 +44,8 @@ namespace Worker_Schedule_Web_Api.Services
                         Hours = hoursSum.GetValueOrDefault(a.WorkerId, 0) / (160 * (a.Worker.EmploymentPercentage / 100)), // magic number 160 is hardcoded temporary
                         WorkerInternalNumber = a.Worker.WorkerInternalNumber,
                         WorkerId = a.WorkerId,
-                        FullName = $"{a.Worker.FirstName} {a.Worker.LastName}"
+                        FullName = $"{a.Worker.FirstName} {a.Worker.LastName}",
+                        Position = a.Worker.Position.Name
                     })
                 .ToList();
 
