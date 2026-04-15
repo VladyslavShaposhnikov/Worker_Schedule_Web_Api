@@ -18,16 +18,17 @@ namespace Worker_Schedule_Web_Api.Services
             foreach (var day in Enumerable.Range(1, DateTime.DaysInMonth(year, month)))
             {
                 var date = new DateOnly(year, month, day);
-
-                HashSet<Guid> alreadyAssignedForDay = schedules
-                    .Where(s => s.Date == date)
-                    .Select(s => s.WorkerId)
-                    .ToHashSet();
+                
+                if (!demands.Any(d => d.Date == date) || !workers.Any(w => w.Date == date))
+                {
+                    continue; // nothing to schedule for this day, skip to the next one
+                }
 
                 var dayDemands = demands
                     .Where(d => d.Date == date)
                     .Select(sd => new SchedulingDemand
                     {
+                        Date = date,
                         From = sd.WorkingUnit.From,
                         To = sd.WorkingUnit.To,
                         WorkersNeeded = sd.WorkersNeeded
@@ -39,17 +40,36 @@ namespace Worker_Schedule_Web_Api.Services
                     .Select(a => new SchedulingWorker
                     {
                         Date = a.Date,
-                        From = a.WorkingUnit.From,
-                        To = a.WorkingUnit.To,
-                        Hours = hoursSum.GetValueOrDefault(a.WorkerId, 0) / (160 * (a.Worker.EmploymentPercentage / 100)), // magic number 160 is hardcoded temporary
-                        WorkerInternalNumber = a.Worker.WorkerInternalNumber,
-                        WorkerId = a.WorkerId,
-                        FullName = $"{a.Worker.FirstName} {a.Worker.LastName}",
-                        Position = a.Worker.Position.Name
+                        From = a?.WorkingUnit?.From,
+                        To = a?.WorkingUnit?.To,
+                        Hours = CalculateHours(hoursSum, a), // magic number 160 is hardcoded temporary
+                        WorkerInternalNumber = a?.Worker?.WorkerInternalNumber ?? 0,
+                        WorkerId = a?.WorkerId ?? Guid.Empty,
+                        FullName = $"{a?.Worker?.FirstName} {a?.Worker?.LastName}",
+                        Position = a?.Worker?.Position?.Name
                     })
                 .ToList();
 
-                var dayResult = schedulingAlgorithm.Calculate(dayDemands, dayWorkers, alreadyAssignedForDay);
+                var workedYesterdayEvening = new Dictionary<Guid, TimeOnly>();
+
+                if (day == 1)
+                {
+                    foreach (var schedule in schedules
+                        .Where(d => d.Date == date.AddDays(-1) && d.WorkingUnit.To >= new TimeOnly(20, 0)))
+                    {
+                        workedYesterdayEvening.Add(schedule.WorkerId, schedule.WorkingUnit.To);
+                    }
+                }
+                else
+                {
+                    foreach (var schedule in result
+                        .Where(d => d.Date == date.AddDays(-1) && d.To >= new TimeOnly(20, 0)))
+                    {
+                        workedYesterdayEvening.Add(schedule.WorkerId, schedule.To);
+                    }
+                }
+
+                var dayResult = schedulingAlgorithm.Calculate(dayDemands, dayWorkers, workedYesterdayEvening);
 
                 result.AddRange(dayResult);
 
@@ -60,6 +80,13 @@ namespace Worker_Schedule_Web_Api.Services
             }
             
             return result;
+        }
+
+        private double CalculateHours(Dictionary<Guid, double>? sum, Availability? worker)
+        {
+            if (worker == null)
+                return 0;
+            return sum.GetValueOrDefault(worker.WorkerId, 0) / (160 * (worker.Worker.EmploymentPercentage / 100.0));
         }
     }
 }

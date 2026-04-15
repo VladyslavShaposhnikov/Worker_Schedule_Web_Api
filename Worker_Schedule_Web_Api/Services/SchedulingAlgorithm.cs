@@ -6,21 +6,45 @@ namespace Worker_Schedule_Web_Api.Services
     public class SchedulingAlgorithm : ISchedulingAlgorithm
     {
 
-        public List<SchedulingResult> Calculate(List<SchedulingDemand> demands, List<SchedulingWorker> workers, HashSet<Guid> alreadyAssignedForDay)
+        public List<SchedulingResult> Calculate(List<SchedulingDemand> demands, List<SchedulingWorker> workers, Dictionary<Guid, TimeOnly> closedStoreYesterday)
         {
             var result = new List<SchedulingResult>();
+            HashSet<Guid> alreadyAssignedForDay = new();
+
             foreach (var demand in demands)
             {
                 var from30 = demand.From.AddMinutes(30);
                 var to30 = demand.To.AddMinutes(-30);
                 var matchingWorkers = workers
                     .Where(w => w.From <= from30 && w.To >= to30 && !alreadyAssignedForDay.Contains(w.WorkerId))
+                    .ToList();
+
+                if (demand.From <= new TimeOnly(10, 0)) // do not allow to assign workers who closed the day before if demand is early morning
+                {
+                    var lessThen11Hours = new List<Guid>();
+                    foreach (var key in closedStoreYesterday.Keys)
+                    {
+                        if (closedStoreYesterday[key].AddHours(11) >= demand.From)
+                        {
+                            lessThen11Hours.Add(key);
+                        }
+                    }
+
+                    if (lessThen11Hours != null)
+                    {
+                        matchingWorkers = matchingWorkers
+                            .Where(w => !lessThen11Hours.Contains(w.WorkerId))
+                            .ToList();
+                    }
+                }
+
+                matchingWorkers = matchingWorkers
                     .OrderByDescending(w => w.Position == "Customer advisor") // prioritize customer advisors
                     .ThenBy(w => w.Hours)
                     .ThenBy(w => w.To - w.From)
                     .ToList();
 
-                if (matchingWorkers.Any() && demand.From <= new TimeOnly(9, 0)) // try insert VM to the top of list
+                if (matchingWorkers.Any() && demand.From <= new TimeOnly(9, 30)) // try insert VM to the top of list
                 {
                     var visualMerchendiser = matchingWorkers
                         .FirstOrDefault(w => w.Position == "Visual merchandiser");
@@ -31,7 +55,7 @@ namespace Worker_Schedule_Web_Api.Services
                         matchingWorkers.Insert(0, visualMerchendiser);
                     }
                 }
-                else if (matchingWorkers.Any() && (demand.From <= new TimeOnly(9, 0) || demand.To >= new TimeOnly(21, 0))) // move manager to the front of list early morning or late evening
+                else if (matchingWorkers.Any() && (demand.From <= new TimeOnly(9, 30) || demand.To >= new TimeOnly(21, 0))) // move manager to the front of list early morning or late evening
                 {
                     var manager = matchingWorkers
                         .FirstOrDefault(w => w.Position != "Customer advisor");
@@ -56,8 +80,8 @@ namespace Worker_Schedule_Web_Api.Services
                     result.Add(new SchedulingResult
                     {
                         Date = worker.Date,
-                        From = localFrom,
-                        To = localTo,
+                        From = localFrom ?? throw new ArgumentNullException(), 
+                        To = localTo ?? throw new ArgumentNullException(),
                         WorkerInternalNumber = worker.WorkerInternalNumber,
                         FullName = worker.FullName,
                         WorkerId = worker.WorkerId

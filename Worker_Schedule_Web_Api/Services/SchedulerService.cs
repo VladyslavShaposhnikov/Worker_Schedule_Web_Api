@@ -26,6 +26,7 @@ namespace Worker_Schedule_Web_Api.Services
                 .Where(sd => sd.Date == date)
                 .Select(sd => new SchedulingDemand
                 {
+                    Date = sd.Date,
                     From = sd.WorkingUnit.From,
                     To = sd.WorkingUnit.To,
                     WorkersNeeded = sd.WorkersNeeded
@@ -47,16 +48,16 @@ namespace Worker_Schedule_Web_Api.Services
                 })
                 .ToListAsync();
 
-            var hashWorkersSet = schedules
-                .Where(s => s.Date == date)
-                .Select(s => s.WorkerId)
-                .ToHashSet();
-
             var workingUnits = await context.WorkingUnits.ToListAsync();
 
             var result = new List<ScheduleDto>();
 
-            var calculationResult = schedulingAlgorithm.Calculate(demands, workers, hashWorkersSet);
+            var workedYesterdayEvening = await context.Schedules
+                .Include(s => s.WorkingUnit)
+                .Where(s => s.Date == date.AddDays(-1) && s.WorkingUnit.To >= new TimeOnly(20, 0))
+                .ToDictionaryAsync(k => k.WorkerId, v => v.WorkingUnit.To);
+
+            var calculationResult = schedulingAlgorithm.Calculate(demands, workers, workedYesterdayEvening);
 
             foreach (var schedule in calculationResult)
             {
@@ -90,7 +91,7 @@ namespace Worker_Schedule_Web_Api.Services
             var schedules = await context
                 .Schedules
                 .Include(s => s.WorkingUnit)
-                .Where(s => s.Date.Year == year && s.Date.Month == month)
+                .Where(s => s.Date.Year == year && s.Date.Month == month || s.Date == new DateOnly(year, month, 1).AddDays(-1))
                 .ToListAsync();
 
             var demands = await context.ShiftDemands
@@ -100,6 +101,7 @@ namespace Worker_Schedule_Web_Api.Services
             var workers = await context.Availabilities
                 .Include(a => a.WorkingUnit)
                 .Include(a => a.Worker)
+                .ThenInclude(w => w.Position)
                 .Where(a => a.Date.Year == year && a.Date.Month == month)
                 .ToListAsync();
 
@@ -131,6 +133,18 @@ namespace Worker_Schedule_Web_Api.Services
 
                 resultSchedules.Add(resultSchedule);
             }
+
+            var ttl = await context
+                .Schedules
+                .GroupBy(s => s.WorkerId)
+                .ToDictionaryAsync(s => s.Key, v => v.Sum(s => (s.WorkingUnit.To - s.WorkingUnit.From).TotalHours));
+
+            foreach(var item in ttl.Keys)
+            {
+                Console.WriteLine("hello");
+                Console.WriteLine($"Worker id: {item}, worked hours: {ttl[item]}");
+            }
+            
             await context.SaveChangesAsync();
             return resultSchedules;
         }
