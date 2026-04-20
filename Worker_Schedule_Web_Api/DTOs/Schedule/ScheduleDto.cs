@@ -9,5 +9,6 @@ namespace Worker_Schedule_Web_Api.DTOs.Schedule
         public TimeOnly To { get; set; }
         public int WorkerInternalNumber { get; set; }
         public string FullName { get; set; } = string.Empty;
+        public Guid ScheduleId { get; set; }
     }
 }

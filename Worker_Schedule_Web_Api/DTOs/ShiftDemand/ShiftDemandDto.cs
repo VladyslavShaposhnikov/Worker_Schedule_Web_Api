@@ -6,5 +6,6 @@
         public TimeOnly From { get; set; }
         public TimeOnly To { get; set; }
         public int WorkersNeeded { get; set; }
+        public Guid ShiftDemandId { get; set; }
     }
 }

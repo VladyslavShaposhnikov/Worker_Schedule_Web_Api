@@ -57,5 +57,13 @@ namespace Worker_Schedule_Web_Api.Controllers
             await scheduler.DeleteDaySchedule(date);
             return NoContent();
         }
+
+        [HttpDelete]
+        [Route("{year:int}/{month:int}/month")]
+        public async Task<ActionResult> DeleteMonthSchedule([FromRoute] int year, [FromRoute] int month)
+        {
+            await scheduler.DeleteMonthSchedule(year, month);
+            return NoContent();
+        }
     }
 }

@@ -42,6 +42,14 @@ namespace Worker_Schedule_Web_Api.Controllers
             return result;
         }
 
+        [HttpGet]
+        [Route("month/{year}/{month}")]
+        public async Task<ActionResult<List<GetAvailabilityDto>>> GetMonthAvailability([FromRoute] int year, [FromRoute] int month)
+        {
+            var result = await availabilityService.GetMonthAvailability(year, month);
+            return result;
+        }
+
         [HttpPut]
         public async Task<ActionResult<GetAvailabilityDto>> UpdateAvailability(CreateUpdateAvailabilityDto form)
         {

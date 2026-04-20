@@ -43,7 +43,11 @@ namespace Worker_Schedule_Web_Api.Controllers
         private async Task<IActionResult> HandleAuthRequest(Func<Task<ResultAuthDto>> func)
         {
             var result = await func();
-            return result.Success ? Ok(result.Token) : BadRequest(result.Errors);
+            return result.Success ? Ok(new
+            {
+                success = true,
+                token = result.Token
+            }) : BadRequest(result.Errors);
         }
     }
 }

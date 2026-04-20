@@ -24,6 +24,44 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         /// <summary>
+        /// Retrieves the list of month shift demands for a specific date.
+        /// </summary>
+        [HttpGet]
+        [Route("{year:int}/{month:int}")]
+        public async Task<ActionResult<List<ShiftDemandDto>>> GetMonthShiftDemand([FromRoute] int year, [FromRoute] int month)
+        {
+            var result = await shiftDemandService.GetMonthShiftDemand(year, month);
+            return result;
+        }
+
+        [HttpPatch]
+        [Route("{id:Guid}/increase")]
+        public async Task<ActionResult<List<ShiftDemandDto>>> IncreaseShiftDemandWorker([FromRoute] Guid id)
+        {
+            await shiftDemandService.IncreaseShiftDemandWorker(id);
+            return Ok();
+        }
+
+        [HttpPatch]
+        [Route("{id:Guid}/decrease")]
+        public async Task<ActionResult<List<ShiftDemandDto>>> DecreaseShiftDemandWorker([FromRoute] Guid id)
+        {
+            await shiftDemandService.DecreaseShiftDemandWorker(id);
+            return Ok();
+        }
+
+        /// <summary>
+        /// Creates/add single shift demands.
+        /// </summary>
+        [HttpPost]
+        [Route("single")]
+        public async Task<ActionResult<List<ShiftDemandDto>>> CreateSingleShiftDemand(ShiftDemandDto form)
+        {
+            var result = await shiftDemandService.CreateSingleShiftDemand(form);
+            return StatusCode(201, result);
+        }
+
+        /// <summary>
         /// Batch creates/add shift demands.
         /// </summary>
         [HttpPost]
@@ -52,6 +90,17 @@ namespace Worker_Schedule_Web_Api.Controllers
         public async Task<ActionResult> DeleteShiftDemand([FromRoute] DateOnly date)
         {
             await shiftDemandService.DeleteShiftDemand(date);
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Deletes all shift demands by Id.
+        /// </summary>
+        [HttpDelete]
+        [Route("{id}/single")]
+        public async Task<ActionResult> DeleteShiftDemandById([FromRoute] Guid id)
+        {
+            await shiftDemandService.DeleteShiftDemandById(id);
             return NoContent();
         }
     }

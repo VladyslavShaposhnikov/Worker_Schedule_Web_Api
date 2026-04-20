@@ -172,6 +172,27 @@ namespace Worker_Schedule_Web_Api.Services
             return result;
         }
 
+        public async Task<List<GetAvailabilityDto>> GetMonthAvailability(int year, int month)
+        {
+            var worker = await GetWorker();
+            return await context.
+                Availabilities
+                .Include(a => a.Worker)
+                .ThenInclude(w => w.Position)
+                .Include(a => a.WorkingUnit)
+                .Where(a => a.Date.Year == year && a.Date.Month == month && a.WorkerId == worker.Id)
+                .Select(a => new GetAvailabilityDto
+                {
+                    WorkerInternalNumber = a.Worker.WorkerInternalNumber,
+                    WorkerName = $"{a.Worker.FirstName} {a.Worker.LastName}",
+                    WorkerPosition = a.Worker.Position.Name,
+                    From = a.WorkingUnit.From,
+                    To = a.WorkingUnit.To,
+                    Date = a.Date
+                })
+                .ToListAsync();
+        }
+
         public async Task<List<GetAvailabilityDto>> UpdateMonthAvailability(CreateUpdateAvailabilityDto[] form, int year, int month)
         {
             var worker = await GetWorker();

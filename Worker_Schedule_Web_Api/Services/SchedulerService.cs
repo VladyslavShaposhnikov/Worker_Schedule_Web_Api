@@ -224,7 +224,8 @@ namespace Worker_Schedule_Web_Api.Services
                     From = s.WorkingUnit.From,
                     To = s.WorkingUnit.To,
                     WorkerInternalNumber = s.Worker.WorkerInternalNumber,
-                    FullName = $"{s.Worker.FirstName} {s.Worker.LastName}"
+                    FullName = $"{s.Worker.FirstName} {s.Worker.LastName}",
+                    ScheduleId = s.Id
                 })
                 .ToListAsync();
 
@@ -242,6 +243,13 @@ namespace Worker_Schedule_Web_Api.Services
         {
             await context.Schedules
                 .Where(s => s.Date == date)
+                .ExecuteDeleteAsync();
+        }
+
+        public async Task DeleteMonthSchedule(int year, int month)
+        {
+            await context.Schedules
+                .Where(s => s.Date.Year == year && s.Date.Month == month)
                 .ExecuteDeleteAsync();
         }
 

@@ -10,5 +10,6 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         Task<List<ScheduleDto>> GetSchedules(ScheduleFilterDto filter);
         Task DeleteDaySchedule(DateOnly date);
         Task DeleteScheduleShift(Guid scheduleId);
+        Task DeleteMonthSchedule(int year, int month);
     }
 }

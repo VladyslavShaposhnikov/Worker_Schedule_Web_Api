@@ -13,6 +13,17 @@ namespace Worker_Schedule_Web_Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAngular", policy =>
+                {
+                    policy
+                        .WithOrigins("http://localhost:8000") 
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
+
             // Add services to the container.
 
             builder.Services.AddLifetimeServices(builder.Configuration);
@@ -47,21 +58,23 @@ namespace Worker_Schedule_Web_Api
             app.UseMiddleware<GlobalExceptionMiddleware>();
 
             // for testing purposes only!!!
-            app.Use(async (context, next) =>
-            {
-                var config = context.RequestServices.GetRequiredService<IConfiguration>();
+            //app.Use(async (context, next) =>
+            //{
+            //    var config = context.RequestServices.GetRequiredService<IConfiguration>();
 
-                var token = config["TestToken"];
+            //    var token = config["TestToken"];
 
-                if (!string.IsNullOrEmpty(token))
-                {
-                    context.Request.Headers.TryAdd("Authorization", $"Bearer {token}");
-                }
+            //    if (!string.IsNullOrEmpty(token))
+            //    {
+            //        context.Request.Headers.TryAdd("Authorization", $"Bearer {token}");
+            //    }
 
-                await next();
-            });
+            //    await next();
+            //});
 
             app.UseHttpsRedirection();
+
+            app.UseCors("AllowAngular");
 
             app.UseAuthentication();
             app.UseAuthorization();

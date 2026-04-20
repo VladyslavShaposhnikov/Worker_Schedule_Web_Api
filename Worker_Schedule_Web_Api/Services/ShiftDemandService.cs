@@ -23,6 +23,49 @@ namespace Worker_Schedule_Web_Api.Services
                 .ToListAsync();
         }
 
+        public async Task IncreaseShiftDemandWorker(Guid id)
+        {
+            var shiftDemand = await context.ShiftDemands
+                .FindAsync(id);
+
+            if (shiftDemand != null)
+            {
+                shiftDemand.WorkersNeeded++;
+                await context.SaveChangesAsync();
+            }
+        }
+
+        public async Task DecreaseShiftDemandWorker(Guid id)
+        {
+            var shiftDemand = await context.ShiftDemands
+                .FindAsync(id);
+
+            if (shiftDemand != null)
+            {
+                if (shiftDemand.WorkersNeeded > 0)
+                {
+                    shiftDemand.WorkersNeeded--;
+                    await context.SaveChangesAsync();
+                }
+            }
+        }
+
+        public async Task<List<ShiftDemandDto>> GetMonthShiftDemand(int year, int month)
+        {
+            return await context.ShiftDemands
+                .Include(sd => sd.WorkingUnit)
+                .Where(sd => sd.Date.Year == year && sd.Date.Month == month)
+                .Select(sd => new ShiftDemandDto
+                {
+                    Date = sd.Date,
+                    From = sd.WorkingUnit.From,
+                    To = sd.WorkingUnit.To,
+                    WorkersNeeded = sd.WorkersNeeded,
+                    ShiftDemandId = sd.Id
+                })
+                .ToListAsync();
+        }
+
         public async Task<List<ShiftDemandDto>> CreateShiftDemand(List<ShiftDemandDto> form)
         {
             var result = new List<ShiftDemandDto>();
@@ -52,9 +95,40 @@ namespace Worker_Schedule_Web_Api.Services
             return result;
         }
 
+        public async Task<List<ShiftDemandDto>> CreateSingleShiftDemand(ShiftDemandDto form)
+        {
+            var result = new List<ShiftDemandDto>();
+
+            var units = await context.WorkingUnits.ToListAsync();
+
+            var workingUnit = CreateWorkingUnitIfNotExists(units, form.From, form.To);
+
+            context.ShiftDemands.Add(new ShiftDemand
+            {
+                Date = form.Date,
+                WorkingUnit = workingUnit,
+                WorkersNeeded = form.WorkersNeeded
+            });
+            result.Add(new ShiftDemandDto
+            {
+                Date = form.Date,
+                From = form.From,
+                To = form.To,
+                WorkersNeeded = form.WorkersNeeded
+            });
+            await context.SaveChangesAsync();
+
+            return result;
+        }
+
         public async Task DeleteShiftDemand(DateOnly date)
         {
             await context.ShiftDemands.Where(sd => sd.Date == date).ExecuteDeleteAsync();
+        }
+
+        public async Task DeleteShiftDemandById(Guid id)
+        {
+            await context.ShiftDemands.Where(sd => sd.Id == id).ExecuteDeleteAsync();
         }
 
         public async Task<List<ShiftDemandDto>> SetDefaultShiftsMonth(int year, int month)
