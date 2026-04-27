@@ -1,4 +1,5 @@
-﻿using Worker_Schedule_Web_Api.DTOs.Schedule;
+﻿using Worker_Schedule_Web_Api.DTOs.Availability;
+using Worker_Schedule_Web_Api.DTOs.Schedule;
 
 namespace Worker_Schedule_Web_Api.Services.Interfaces
 {
@@ -11,5 +12,6 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         Task DeleteDaySchedule(DateOnly date);
         Task DeleteScheduleShift(Guid scheduleId);
         Task DeleteMonthSchedule(int year, int month);
+        Task<List<SummaryByWorkers>> WorkersSummary(int year, int month);
     }
 }

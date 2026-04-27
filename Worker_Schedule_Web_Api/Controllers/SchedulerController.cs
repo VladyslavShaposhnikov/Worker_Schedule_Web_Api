@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Worker_Schedule_Web_Api.DTOs.Availability;
 using Worker_Schedule_Web_Api.DTOs.Schedule;
 using Worker_Schedule_Web_Api.Models.Identity;
 using Worker_Schedule_Web_Api.Services.Interfaces;
@@ -39,6 +40,14 @@ namespace Worker_Schedule_Web_Api.Controllers
         public async Task<List<ScheduleDto>> GetSchedule([FromQuery] ScheduleFilterDto filter)
         {
             var result = await scheduler.GetSchedules(filter);
+            return result;
+        }
+
+        [HttpGet]
+        [Route("summary/{year:int}/{month:int}")]
+        public async Task<List<SummaryByWorkers>> GetWorkerScheduleSummary([FromRoute] int year,[FromRoute] int month)
+        {
+            var result = await scheduler.WorkersSummary(year, month);
             return result;
         }
 

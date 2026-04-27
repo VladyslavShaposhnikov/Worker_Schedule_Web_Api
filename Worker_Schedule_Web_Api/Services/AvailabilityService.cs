@@ -132,6 +132,42 @@ namespace Worker_Schedule_Web_Api.Services
             return result;
         }
 
+        public async Task<List<GetAvailabilityDto>> GetAvailableWorkers(DateOnly date)
+        {
+            var workedToday = await context.Schedules
+                .Where(s => s.Date == date)
+                .Select(s => s.WorkerId)
+                .ToListAsync();
+
+            var workers = await context.Availabilities
+                .Where(a => a.Date == date)
+                .Include(a => a.Worker)
+                .ThenInclude(a => a.Position)
+                .Select(a => new
+                {
+                    WorkerObj = a.Worker,
+                    from = a.WorkingUnit.From,
+                    to = a.WorkingUnit.To
+                })
+                .ToListAsync();
+
+            var res = workers.
+                Where(w => !workedToday.Contains(w.WorkerObj.Id))
+                .Select(w => new GetAvailabilityDto
+                {
+                    WorkerName = $"{w.WorkerObj.FirstName} {w.WorkerObj.LastName}",
+                    WorkerInternalNumber = w.WorkerObj.WorkerInternalNumber,
+                    WorkerPosition = w.WorkerObj.Position.Name,
+                    Date = date,
+                    From = w.from,
+                    To = w.to
+                })
+                .ToList();
+
+            Console.WriteLine(string.Join(", ", res.Select(w => w.WorkerInternalNumber)));
+            return res;
+        }
+
         public async Task<GetAvailabilityDto> UpdateAvailability(CreateUpdateAvailabilityDto form)
         {
             var worker = await GetWorker();

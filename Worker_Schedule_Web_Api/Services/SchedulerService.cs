@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Worker_Schedule_Web_Api.Data;
+using Worker_Schedule_Web_Api.DTOs.Availability;
 using Worker_Schedule_Web_Api.DTOs.Schedule;
 using Worker_Schedule_Web_Api.Exceptions;
 using Worker_Schedule_Web_Api.Models.Domain;
 using Worker_Schedule_Web_Api.Models.Schedule;
 using Worker_Schedule_Web_Api.Services.Interfaces;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Worker_Schedule_Web_Api.Services
 {
@@ -251,6 +253,36 @@ namespace Worker_Schedule_Web_Api.Services
             await context.Schedules
                 .Where(s => s.Date.Year == year && s.Date.Month == month)
                 .ExecuteDeleteAsync();
+        }
+
+        public async Task<List<SummaryByWorkers>> WorkersSummary(int year, int month)
+        {
+            var schedules = await context
+                .Schedules
+                .Include(s => s.WorkingUnit)
+                .Where(s => s.Date.Year == year && s.Date.Month == month)
+                .ToListAsync();
+
+            var hoursSum = schedules
+                .GroupBy(s => s.WorkerId)
+                .ToDictionary(
+                d => d.Key, 
+                d => d.Sum(s => (s.WorkingUnit.To - s.WorkingUnit.From).TotalHours)
+                );
+
+            var res = await context.Workers.Include(w => w.Position).Select(w => new SummaryByWorkers
+            {
+                Id = w.Id,
+                WorkerInternalNumber = w.WorkerInternalNumber,
+                EmploymentPercentage = w.EmploymentPercentage,
+                FirstName = w.FirstName,
+                LastName = w.LastName,
+                Position = w.Position.Name,
+                WorkedHours = hoursSum.GetValueOrDefault(w.Id, 0)
+            }).ToListAsync();
+
+            Console.WriteLine(string.Join(", ", res.Select(s => s.WorkedHours)));
+            return res;
         }
 
         private WorkingUnit CreateWorkingUnitIfNotExists(List<WorkingUnit> workingUnits, TimeOnly from, TimeOnly to)

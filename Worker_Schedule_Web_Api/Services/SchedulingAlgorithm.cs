@@ -55,10 +55,11 @@ namespace Worker_Schedule_Web_Api.Services
                         matchingWorkers.Insert(0, visualMerchendiser);
                     }
                 }
-                else if (matchingWorkers.Any() && (demand.From <= new TimeOnly(9, 30) || demand.To >= new TimeOnly(21, 0))) // move manager to the front of list early morning or late evening
+                if (matchingWorkers.Any() && (demand.From <= new TimeOnly(9, 30) || demand.To >= new TimeOnly(21, 0))) // move manager to the front of list early morning or late evening
                 {
                     var manager = matchingWorkers
-                        .FirstOrDefault(w => w.Position != "Customer advisor");
+                        .OrderBy(w => w.Hours)
+                        .FirstOrDefault(w => w.Position == "Manager");
 
                     if (manager != null)
                     {

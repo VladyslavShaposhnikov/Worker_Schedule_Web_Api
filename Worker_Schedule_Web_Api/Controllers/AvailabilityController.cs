@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Worker_Schedule_Web_Api.DTOs.Availability;
+using Worker_Schedule_Web_Api.Models.Domain;
 using Worker_Schedule_Web_Api.Models.Identity;
 using Worker_Schedule_Web_Api.Services;
 using Worker_Schedule_Web_Api.Services.Interfaces;
@@ -9,10 +10,11 @@ namespace Worker_Schedule_Web_Api.Controllers
 {
     [ApiController]
     [Route("api/availabilities")]
-    [Authorize(Roles = $"{AppRoles.Worker},{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
+    [Authorize]
     public class AvailabilityController(IAvailabilityService availabilityService) : ControllerBase
     {
         [HttpGet]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         public async Task<ActionResult<List<GetAvailabilityDto>>> Availabilities([FromQuery] AvailabilityFilterDto filters)
         {
             var result = await availabilityService.Availabilities(filters);
@@ -24,6 +26,14 @@ namespace Worker_Schedule_Web_Api.Controllers
         public async Task<ActionResult<GetAvailabilityDto>> GetAvailability([FromRoute] DateOnly date)
         {
             var result = await availabilityService.GetAvailability(date);
+            return result;
+        }
+
+        [HttpGet]
+        [Route("available-workers/{date}")]
+        public async Task<List<GetAvailabilityDto>> GetAvailableWorkers([FromRoute] DateOnly date)
+        {
+            var result = await availabilityService.GetAvailableWorkers(date);
             return result;
         }
 
