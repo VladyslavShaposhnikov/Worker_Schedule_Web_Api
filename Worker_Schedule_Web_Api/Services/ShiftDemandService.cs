@@ -160,7 +160,34 @@ namespace Worker_Schedule_Web_Api.Services
                         WorkersNeeded = 2
                     });
                 }
-                else if (date.DayOfWeek == DayOfWeek.Friday || date.DayOfWeek == DayOfWeek.Saturday)
+                else if (date.DayOfWeek == DayOfWeek.Saturday)
+                {
+                    context.ShiftDemands.Add(new ShiftDemand
+                    {
+                        Date = date,
+                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(9, 30), new TimeOnly(17, 30)),
+                        WorkersNeeded = 1
+                    });
+                    context.ShiftDemands.Add(new ShiftDemand
+                    {
+                        Date = date,
+                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(9, 30), new TimeOnly(14, 30)),
+                        WorkersNeeded = 1
+                    });
+                    context.ShiftDemands.Add(new ShiftDemand
+                    {
+                        Date = date,
+                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(12, 0), new TimeOnly(20, 0)),
+                        WorkersNeeded = 2
+                    });
+                    context.ShiftDemands.Add(new ShiftDemand
+                    {
+                        Date = date,
+                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(14, 0), new TimeOnly(21, 30)),
+                        WorkersNeeded = 3
+                    });
+                }
+                else if (date.DayOfWeek == DayOfWeek.Friday)
                 {
                     context.ShiftDemands.Add(new ShiftDemand
                     {

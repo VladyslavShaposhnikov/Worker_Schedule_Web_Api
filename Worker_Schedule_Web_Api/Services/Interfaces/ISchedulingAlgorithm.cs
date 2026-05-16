@@ -7,7 +7,9 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         List<SchedulingResult> Calculate(
             List<SchedulingDemand> demands,
             List<SchedulingWorker> workers,
-            Dictionary<Guid, TimeOnly> closedStoreYesterday
+            Dictionary<Guid, TimeOnly> closedStoreYesterday,
+            Dictionary<Guid, int[]> workedSaturdays, 
+            int saturdays
             );
     }
 }

@@ -10,6 +10,7 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
             List<Availability> workers, 
             List<Schedule> schedules,
             int year, 
-            int month);
+            int month
+            );
     }
 }

@@ -1,13 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Worker_Schedule_Web_Api.Models.Domain;
+﻿using Worker_Schedule_Web_Api.Models.Domain;
 using Worker_Schedule_Web_Api.Models.Schedule;
 using Worker_Schedule_Web_Api.Services.Interfaces;
 
 namespace Worker_Schedule_Web_Api.Services
 {
-    public class ScheduleMonthAlgorithm(ISchedulingAlgorithm schedulingAlgorithm) : IScheduleMonthAlgorithm
+    public class ScheduleMonthAlgorithm(ISchedulingAlgorithm schedulingAlgorithm, IConfiguration configuration) : IScheduleMonthAlgorithm
     {
-        public List<SchedulingResult> Calculate(List<ShiftDemand> demands, List<Availability> workers, List<Schedule> schedules, int year, int month)
+        public List<SchedulingResult> Calculate(
+            List<ShiftDemand> demands, 
+            List<Availability> workers, 
+            List<Schedule> schedules, 
+            int year, 
+            int month)
         {
             var result = new List<SchedulingResult>();
 
@@ -42,7 +46,7 @@ namespace Worker_Schedule_Web_Api.Services
                         Date = a.Date,
                         From = a?.WorkingUnit?.From,
                         To = a?.WorkingUnit?.To,
-                        Hours = CalculateHours(hoursSum, a), // magic number 160 is hardcoded temporary
+                        Hours = CalculateHours(hoursSum, a),
                         WorkerInternalNumber = a?.Worker?.WorkerInternalNumber ?? 0,
                         WorkerId = a?.WorkerId ?? Guid.Empty,
                         FullName = $"{a?.Worker?.FirstName} {a?.Worker?.LastName}",
@@ -69,7 +73,46 @@ namespace Worker_Schedule_Web_Api.Services
                     }
                 }
 
-                var dayResult = schedulingAlgorithm.Calculate(dayDemands, dayWorkers, workedYesterdayEvening);
+                var workedSaturdays = new Dictionary<Guid, int[]>();
+
+                foreach (var worker in workers)
+                {
+                    int firstShift = result
+                        .Count(w => w.Date.Year == date.Year
+                            && w.Date.Month == date.Month
+                            && w.WorkerId == worker.WorkerId
+                            && w.Date.DayOfWeek == DayOfWeek.Saturday
+                            && w.From <= new TimeOnly(9, 30));
+
+                    int secondShift = result
+                        .Count(w => w.Date.Year == date.Year
+                            && w.Date.Month == date.Month
+                            && w.WorkerId == worker.WorkerId
+                            && w.Date.DayOfWeek == DayOfWeek.Saturday
+                            && w.From >= new TimeOnly(12, 0)
+                            && w.To <= new TimeOnly(20, 0));
+
+                    int thirdShift = result
+                        .Count(w => w.Date.Year == date.Year
+                            && w.Date.Month == date.Month
+                            && w.WorkerId == worker.WorkerId
+                            && w.Date.DayOfWeek == DayOfWeek.Saturday
+                            && w.To >= new TimeOnly(21, 30));
+
+                    workedSaturdays[worker.WorkerId] = new int[3] { firstShift, secondShift, thirdShift };
+                }
+
+                int saturdays = 0;
+
+                foreach (var item in Enumerable.Range(1, DateTime.DaysInMonth(date.Year, date.Month)))
+                {
+                    if (new DateOnly(date.Year, date.Month, item).DayOfWeek == DayOfWeek.Saturday)
+                    {
+                        saturdays++;
+                    }
+                }
+
+                var dayResult = schedulingAlgorithm.Calculate(dayDemands, dayWorkers, workedYesterdayEvening, workedSaturdays, saturdays);
 
                 result.AddRange(dayResult);
 
@@ -86,7 +129,10 @@ namespace Worker_Schedule_Web_Api.Services
         {
             if (worker == null)
                 return 0;
-            return sum.GetValueOrDefault(worker.WorkerId, 0) / (160 * (worker.Worker.EmploymentPercentage / 100.0));
+            // now it get the month worker hours from configuration, if not set, it will be 160 (40 hours per week * 4 weeks),
+            // but it should be changed to be more dynamic in the future
+            int monthWorkerHours = configuration.GetValue<int>("MonthWorkerHours", 160);
+            return sum.GetValueOrDefault(worker.WorkerId, 0) / (monthWorkerHours * (worker.Worker.EmploymentPercentage / 100.0));
         }
     }
 }

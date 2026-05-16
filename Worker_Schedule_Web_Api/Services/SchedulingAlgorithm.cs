@@ -1,15 +1,25 @@
-﻿using Worker_Schedule_Web_Api.Models.Schedule;
+﻿using Microsoft.EntityFrameworkCore;
+using Worker_Schedule_Web_Api.Models.Schedule;
 using Worker_Schedule_Web_Api.Services.Interfaces;
 
 namespace Worker_Schedule_Web_Api.Services
 {
-    public class SchedulingAlgorithm : ISchedulingAlgorithm
+    public class SchedulingAlgorithm(ISchedulingSaturdayAlgorithm schedulingSaturdayAlgorithm) : ISchedulingAlgorithm
     {
 
-        public List<SchedulingResult> Calculate(List<SchedulingDemand> demands, List<SchedulingWorker> workers, Dictionary<Guid, TimeOnly> closedStoreYesterday)
+        public List<SchedulingResult> Calculate(List<SchedulingDemand> demands, List<SchedulingWorker> workers, Dictionary<Guid, TimeOnly> closedStoreYesterday, Dictionary<Guid, int[]> workedSaturdays, int saturdays)
         {
             var result = new List<SchedulingResult>();
             HashSet<Guid> alreadyAssignedForDay = new();
+
+            DayOfWeek dayOfWeek = demands.Select(d => d.Date)
+                .FirstOrDefault().DayOfWeek;
+
+            if (dayOfWeek == DayOfWeek.Saturday) // todo refactor to be more intuitive and not to use firstordefault
+            {
+                result = schedulingSaturdayAlgorithm.CalculateSaturday(demands, workers, workedSaturdays, saturdays);
+                return result;
+            }
 
             foreach (var demand in demands)
             {
@@ -81,7 +91,7 @@ namespace Worker_Schedule_Web_Api.Services
                     result.Add(new SchedulingResult
                     {
                         Date = worker.Date,
-                        From = localFrom ?? throw new ArgumentNullException(), 
+                        From = localFrom ?? throw new ArgumentNullException(),
                         To = localTo ?? throw new ArgumentNullException(),
                         WorkerInternalNumber = worker.WorkerInternalNumber,
                         FullName = worker.FullName,

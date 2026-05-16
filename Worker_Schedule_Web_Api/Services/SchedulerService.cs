@@ -1,16 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Worker_Schedule_Web_Api.Data;
-using Worker_Schedule_Web_Api.DTOs.Availability;
 using Worker_Schedule_Web_Api.DTOs.Schedule;
 using Worker_Schedule_Web_Api.Exceptions;
 using Worker_Schedule_Web_Api.Models.Domain;
 using Worker_Schedule_Web_Api.Models.Schedule;
 using Worker_Schedule_Web_Api.Services.Interfaces;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Worker_Schedule_Web_Api.Services
 {
-    public class SchedulerService(AppDbContext context, ISchedulingAlgorithm schedulingAlgorithm, IScheduleMonthAlgorithm scheduleMonthAlgorithm) : IScheduler
+    public class SchedulerService(
+        AppDbContext context, 
+        ISchedulingAlgorithm schedulingAlgorithm, 
+        IScheduleMonthAlgorithm scheduleMonthAlgorithm,
+        ISchedulingSaturdayAlgorithm schedulingSaturdayAlgorithm,
+        IConfiguration configuration) : IScheduler
     {
         public async Task<List<ScheduleDto>> CreateDaySchedule(DateOnly date)
         {
@@ -35,6 +38,8 @@ namespace Worker_Schedule_Web_Api.Services
                 })
                 .ToListAsync();
 
+            int monthWorkerHours = configuration.GetValue<int>("MonthWorkerHours", 160);
+
             var workers = await context.Availabilities
                 .Where(a => a.Date == date)
                 .Select(a => new SchedulingWorker
@@ -42,7 +47,7 @@ namespace Worker_Schedule_Web_Api.Services
                     Date = a.Date,
                     From = a.WorkingUnit.From,
                     To = a.WorkingUnit.To,
-                    Hours = hoursSum.GetValueOrDefault(a.WorkerId, 0) / (160 * (a.Worker.EmploymentPercentage / 100)), // magic number 160 is hardcoded temporary
+                    Hours = hoursSum.GetValueOrDefault(a.WorkerId, 0) / (monthWorkerHours * (a.Worker.EmploymentPercentage / 100)),
                     WorkerInternalNumber = a.Worker.WorkerInternalNumber,
                     WorkerId = a.WorkerId,
                     FullName = $"{a.Worker.FirstName} {a.Worker.LastName}",
@@ -59,7 +64,35 @@ namespace Worker_Schedule_Web_Api.Services
                 .Where(s => s.Date == date.AddDays(-1) && s.WorkingUnit.To >= new TimeOnly(20, 0))
                 .ToDictionaryAsync(k => k.WorkerId, v => v.WorkingUnit.To);
 
-            var calculationResult = schedulingAlgorithm.Calculate(demands, workers, workedYesterdayEvening);
+            var workedSaturdays = new Dictionary<Guid, int[]>();
+
+            foreach (var worker in workers)
+            {
+                int firstShift = schedules
+                    .Where(w => w.WorkerId == worker.WorkerId
+                        && w.Date.DayOfWeek == DayOfWeek.Saturday
+                        && w.WorkingUnit.From <= new TimeOnly(9, 30))
+                    .Count();
+
+                int secondShift = schedules
+                    .Where(w => w.WorkerId == worker.WorkerId
+                        && w.Date.DayOfWeek == DayOfWeek.Saturday
+                        && w.WorkingUnit.From >= new TimeOnly(12, 0)
+                        && w.WorkingUnit.To <= new TimeOnly(20, 0))
+                    .Count();
+
+                int thirdShift = schedules
+                    .Where(w => w.WorkerId == worker.WorkerId
+                        && w.Date.DayOfWeek == DayOfWeek.Saturday
+                        && w.WorkingUnit.To >= new TimeOnly(21, 30))
+                    .Count();
+
+                workedSaturdays[worker.WorkerId] = new int[3] { firstShift, secondShift, thirdShift };
+            }
+
+            int saturdays = GetSaturdaysNumberInMonth(date.Year, date.Month);
+
+            var calculationResult = schedulingAlgorithm.Calculate(demands, workers, workedYesterdayEvening, workedSaturdays, saturdays);
 
             foreach (var schedule in calculationResult)
             {
@@ -134,17 +167,6 @@ namespace Worker_Schedule_Web_Api.Services
                 };
 
                 resultSchedules.Add(resultSchedule);
-            }
-
-            var ttl = await context
-                .Schedules
-                .GroupBy(s => s.WorkerId)
-                .ToDictionaryAsync(s => s.Key, v => v.Sum(s => (s.WorkingUnit.To - s.WorkingUnit.From).TotalHours));
-
-            foreach(var item in ttl.Keys)
-            {
-                Console.WriteLine("hello");
-                Console.WriteLine($"Worker id: {item}, worked hours: {ttl[item]}");
             }
             
             await context.SaveChangesAsync();
@@ -255,6 +277,7 @@ namespace Worker_Schedule_Web_Api.Services
                 .ExecuteDeleteAsync();
         }
 
+        // Worked hours summary for each worker for given month and year
         public async Task<List<SummaryByWorkers>> WorkersSummary(int year, int month)
         {
             var schedules = await context
@@ -281,7 +304,6 @@ namespace Worker_Schedule_Web_Api.Services
                 WorkedHours = hoursSum.GetValueOrDefault(w.Id, 0)
             }).ToListAsync();
 
-            Console.WriteLine(string.Join(", ", res.Select(s => s.WorkedHours)));
             return res;
         }
 
@@ -301,6 +323,13 @@ namespace Worker_Schedule_Web_Api.Services
                 context.WorkingUnits.Add(workingUnit);
             }
             return workingUnit;
+        }
+
+        private int GetSaturdaysNumberInMonth(int year, int month)
+        {
+            int res = Enumerable.Range(1, DateTime.DaysInMonth(year, month))
+                .Count(d => new DateOnly(year, month, d).DayOfWeek == DayOfWeek.Saturday);
+            return res;
         }
     }
 }

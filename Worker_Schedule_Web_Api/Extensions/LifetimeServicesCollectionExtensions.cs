@@ -23,6 +23,7 @@ namespace Worker_Schedule_Web_Api.Extensions
             services.AddScoped<ISchedulingAlgorithm, SchedulingAlgorithm>();
             services.AddScoped<IScheduleMonthAlgorithm, ScheduleMonthAlgorithm>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ISchedulingSaturdayAlgorithm, SchedulingSaturdayAlgorithm>();
 
             services.AddDbContext<AppDbContext>();
             services.AddIdentityCore<AppUser>()
