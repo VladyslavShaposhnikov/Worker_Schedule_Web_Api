@@ -51,6 +51,14 @@ namespace Worker_Schedule_Web_Api.Controllers
             return result;
         }
 
+        [HttpGet]
+        [Route("month/{year:int}/{month:int}")]
+        public async Task<List<ScheduleDto>> GetMonthSchedule([FromRoute] int year, [FromRoute] int month)
+        {
+            var result = await scheduler.MonthSchedule(year, month);
+            return result;
+        }
+
         [HttpDelete]
         [Route("{scheduleId:guid}")]
         public async Task<ActionResult> DeleteScheduleById([FromRoute]Guid scheduleId)

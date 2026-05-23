@@ -13,5 +13,6 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         Task DeleteScheduleShift(Guid scheduleId);
         Task DeleteMonthSchedule(int year, int month);
         Task<List<SummaryByWorkers>> WorkersSummary(int year, int month);
+        Task<List<ScheduleDto>> MonthSchedule(int year, int month);
     }
 }

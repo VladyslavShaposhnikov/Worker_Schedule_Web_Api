@@ -1,8 +1,11 @@
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using Worker_Schedule_Web_Api.Data;
 using Worker_Schedule_Web_Api.Extensions;
 using Worker_Schedule_Web_Api.Middleware;
+using Worker_Schedule_Web_Api.Models.Domain;
 using Worker_Schedule_Web_Api.Models.Identity;
 
 namespace Worker_Schedule_Web_Api
@@ -33,6 +36,17 @@ namespace Worker_Schedule_Web_Api
             using (var scopeService = app.Services.CreateScope())
             {
                 var services = scopeService.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<AppDbContext>();
+                    context.Database.Migrate();
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred while migrating or creating the database.");
+                    throw;
+                }
                 var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                 if (! await roleManager.RoleExistsAsync(AppRoles.Worker))
                 {

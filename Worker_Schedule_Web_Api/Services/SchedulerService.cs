@@ -307,6 +307,23 @@ namespace Worker_Schedule_Web_Api.Services
             return res;
         }
 
+        public async Task<List<ScheduleDto>> MonthSchedule(int year, int month)
+        {
+            var schedules = await context
+                .Schedules
+                .Where(s => s.Date.Year == year && s.Date.Month == month)
+                .Select(s => new ScheduleDto
+                {
+                    Date = s.Date,
+                    From = s.WorkingUnit.From,
+                    To = s.WorkingUnit.To,
+                    WorkerInternalNumber = s.Worker.WorkerInternalNumber,
+                    FullName = $"{s.Worker.FirstName} {s.Worker.LastName}"
+                }).ToListAsync();
+
+            return schedules;
+        }
+
         private WorkingUnit CreateWorkingUnitIfNotExists(List<WorkingUnit> workingUnits, TimeOnly from, TimeOnly to)
         {
             var workingUnit = workingUnits
