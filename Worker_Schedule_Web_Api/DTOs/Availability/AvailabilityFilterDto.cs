@@ -4,7 +4,7 @@
     {
         public DateOnly? startDate { get; set; } = null;
         public DateOnly? endDate { get; set; } = null;
-        public int? workerInternalNumber { get; set; } = null;
+        public string? workerInternalNumbers { get; set; } = null;
         public string? workerPosition { get; set; } = null;
         public string? workerName { get; set; } = null;
         public TimeOnly? from { get; set; } = null;

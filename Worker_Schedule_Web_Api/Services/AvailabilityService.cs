@@ -27,9 +27,10 @@ namespace Worker_Schedule_Web_Api.Services
                 query = query.Where(a => a.Date <= filter.endDate);
             }
 
-            if (filter.workerInternalNumber != null)
+            if (!string.IsNullOrEmpty(filter.workerInternalNumbers))
             {
-                query = query.Where(a => a.Worker.WorkerInternalNumber == filter.workerInternalNumber);
+                int[] workerInternalIds = filter.workerInternalNumbers.Split(',').Select(item => int.Parse(item)).ToArray();
+                query = query.Where(a => workerInternalIds.Contains(a.Worker.WorkerInternalNumber));
             }
 
             if (filter.workerPosition != null)
@@ -57,6 +58,7 @@ namespace Worker_Schedule_Web_Api.Services
             return await query.Select(a =>
                 new GetAvailabilityDto
                 {
+                    AvailabilityId = a.Id,
                     WorkerName = $"{a.Worker.FirstName} {a.Worker.LastName}",
                     WorkerInternalNumber = a.Worker.WorkerInternalNumber,
                     WorkerPosition = a.Worker.Position.Name,
@@ -328,6 +330,26 @@ namespace Worker_Schedule_Web_Api.Services
                 context.WorkingUnits.Add(workingUnit);
             }
             return workingUnit;
+        }
+
+        public async Task<List<GetAvailabilityDto>> AvailabilitiesUser(string userId)
+        {
+            var result = await context.Availabilities
+                .Include(a => a.Worker)
+                .ThenInclude(w => w.Position)
+                .Where(a => a.Worker.AppUserId == userId)
+                .Select(a => new GetAvailabilityDto
+                {
+                    AvailabilityId = a.Id,
+                    Date = a.Date,
+                    From = a.WorkingUnit.From,
+                    To = a.WorkingUnit.To,
+                    WorkerInternalNumber = a.Worker.WorkerInternalNumber,
+                    WorkerName = $"{a.Worker.FirstName} {a.Worker.LastName}",
+                    WorkerPosition = a.Worker.Position.Name
+                })
+                .ToListAsync();
+            return result;
         }
     }
 }

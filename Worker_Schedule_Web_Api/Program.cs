@@ -21,7 +21,7 @@ namespace Worker_Schedule_Web_Api
                 options.AddPolicy("AllowAngular", policy =>
                 {
                     policy
-                        .WithOrigins("http://localhost:8000") 
+                        .WithOrigins("http://localhost:4200") 
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });

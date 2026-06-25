@@ -9,10 +9,10 @@ namespace Worker_Schedule_Web_Api.Controllers
 {
     [ApiController]
     [Route("api/schedules")]
-    [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
     public class SchedulerController(IScheduler scheduler) : ControllerBase
     {
         [HttpPost]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [Route("{date}")]
         public async Task<ActionResult<List<ScheduleDto>>> CreateDaySchedule([FromRoute] DateOnly date)
         {
@@ -21,6 +21,7 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [Route("{year:int}/{month:int}")]
         public async Task<ActionResult<List<ScheduleDto>>> CreateMonthSchedule([FromRoute] int year, [FromRoute] int month)
         {
@@ -29,6 +30,7 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [Route("add-single-worker")]
         public async Task<ActionResult<List<ScheduleDto>>> AddSingleWorker(ScheduleWorkerDto form)
         {
@@ -37,13 +39,33 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         public async Task<List<ScheduleDto>> GetSchedule([FromQuery] ScheduleFilterDto filter)
         {
             var result = await scheduler.GetSchedules(filter);
             return result;
         }
+        
+        [HttpGet]
+        [Authorize]
+        [Route("user")]
+        public async Task<List<ScheduleDto>> GetUserSchedule([FromQuery] Guid userId)
+        {
+            var result = await scheduler.GetUserSchedules(userId);
+            return result;
+        }
 
         [HttpGet]
+        [Authorize]
+        [Route("workers")]
+        public async Task<List<WorkersLookupDto>> GetWorkersLookup()
+        {
+            var result = await scheduler.WorkersLookup();
+            return result;
+        }
+
+        [HttpGet]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [Route("summary/{year:int}/{month:int}")]
         public async Task<List<SummaryByWorkers>> GetWorkerScheduleSummary([FromRoute] int year,[FromRoute] int month)
         {
@@ -52,6 +74,7 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [Route("month/{year:int}/{month:int}")]
         public async Task<List<ScheduleDto>> GetMonthSchedule([FromRoute] int year, [FromRoute] int month)
         {
@@ -60,6 +83,7 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpDelete]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [Route("{scheduleId:guid}")]
         public async Task<ActionResult> DeleteScheduleById([FromRoute]Guid scheduleId)
         {
@@ -68,6 +92,7 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpDelete]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [Route("{date}")]
         public async Task<ActionResult> DeleteSchedule([FromRoute] DateOnly date)
         {
@@ -76,6 +101,7 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpDelete]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [Route("{year:int}/{month:int}/month")]
         public async Task<ActionResult> DeleteMonthSchedule([FromRoute] int year, [FromRoute] int month)
         {

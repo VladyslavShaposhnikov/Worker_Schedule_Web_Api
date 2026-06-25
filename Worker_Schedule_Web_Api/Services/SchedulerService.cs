@@ -218,6 +218,10 @@ namespace Worker_Schedule_Web_Api.Services
         {
             var schedules = context.Schedules.AsQueryable();
 
+            if (filter.UserId.HasValue)
+            {
+                schedules = schedules.Where(s => s.Worker.AppUserId == filter.UserId.Value.ToString());
+            }
             if (filter.startDate.HasValue)
             {
                 schedules = schedules.Where(s => s.Date >= filter.startDate.Value);
@@ -226,9 +230,10 @@ namespace Worker_Schedule_Web_Api.Services
             {
                 schedules = schedules.Where(s => s.Date <= filter.endDate.Value);
             }
-            if (filter.workerInternalNumber.HasValue)
+            if (!string.IsNullOrEmpty(filter.workerInternalNumbers))
             {
-                schedules = schedules.Where(s => s.Worker.WorkerInternalNumber == filter.workerInternalNumber.Value);
+                int[] workerInternalIds = filter.workerInternalNumbers.Split(',').Select(item => int.Parse(item)).ToArray();
+                schedules = schedules.Where(s => workerInternalIds.Contains(s.Worker.WorkerInternalNumber));
             }
             if (!string.IsNullOrEmpty(filter.workerName))
             {
@@ -242,6 +247,25 @@ namespace Worker_Schedule_Web_Api.Services
                 .ThenBy(s => s.WorkerId)
                 .Skip((filter.page - 1) * filter.pageSize)
                 .Take(filter.pageSize)
+                .Select(s => new ScheduleDto
+                {
+                    Date = s.Date,
+                    From = s.WorkingUnit.From,
+                    To = s.WorkingUnit.To,
+                    WorkerInternalNumber = s.Worker.WorkerInternalNumber,
+                    FullName = $"{s.Worker.FirstName} {s.Worker.LastName}",
+                    ScheduleId = s.Id
+                })
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<List<ScheduleDto>> GetUserSchedules(Guid userId)
+        {
+            var result = await context.Schedules
+                .Where(s => s.Worker.AppUserId == userId.ToString())
+                .OrderBy(s => s.Date)
                 .Select(s => new ScheduleDto
                 {
                     Date = s.Date,
@@ -322,6 +346,19 @@ namespace Worker_Schedule_Web_Api.Services
                 }).ToListAsync();
 
             return schedules;
+        }
+
+        public async Task<List<WorkersLookupDto>> WorkersLookup()
+        {
+            var workers = await context
+                .Workers
+                .Select(w => new WorkersLookupDto
+                {
+                    Id = w.Id,
+                    FullName = $"{w.FirstName} {w.LastName}",
+                    WorkerInternalNumber = w.WorkerInternalNumber
+                }).ToListAsync();
+            return workers;
         }
 
         private WorkingUnit CreateWorkingUnitIfNotExists(List<WorkingUnit> workingUnits, TimeOnly from, TimeOnly to)

@@ -9,10 +9,12 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         Task<List<ScheduleDto>> CreateMonthSchedule(int year, int month);
         Task<List<ScheduleDto>> AddSingleWorker(ScheduleWorkerDto form);
         Task<List<ScheduleDto>> GetSchedules(ScheduleFilterDto filter);
+        Task<List<ScheduleDto>> GetUserSchedules(Guid userId);
         Task DeleteDaySchedule(DateOnly date);
         Task DeleteScheduleShift(Guid scheduleId);
         Task DeleteMonthSchedule(int year, int month);
         Task<List<SummaryByWorkers>> WorkersSummary(int year, int month);
         Task<List<ScheduleDto>> MonthSchedule(int year, int month);
+        Task<List<WorkersLookupDto>> WorkersLookup();
     }
 }

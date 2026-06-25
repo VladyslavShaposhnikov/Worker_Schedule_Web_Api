@@ -7,6 +7,7 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
     public interface IAvailabilityService
     {
         Task<List<GetAvailabilityDto>> Availabilities([FromQuery] AvailabilityFilterDto filter);
+        Task<List<GetAvailabilityDto>> AvailabilitiesUser(string userId);
         Task<GetAvailabilityDto> GetAvailability(DateOnly date);
         Task<GetAvailabilityDto> CreateAvailability(CreateUpdateAvailabilityDto form);
         Task<List<GetAvailabilityDto>> CreateMonthAvailability(CreateUpdateAvailabilityDto[] form, int year, int month);

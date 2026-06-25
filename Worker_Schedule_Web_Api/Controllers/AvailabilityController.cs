@@ -22,6 +22,15 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpGet]
+        [Authorize]
+        [Route("user")]
+        public async Task<ActionResult<List<GetAvailabilityDto>>> AvailabilitiesUser([FromQuery] string userId)
+        {
+            var result = await availabilityService.AvailabilitiesUser(userId);
+            return result;
+        }
+
+        [HttpGet]
         [Route("day/{date}")]
         public async Task<ActionResult<GetAvailabilityDto>> GetAvailability([FromRoute] DateOnly date)
         {

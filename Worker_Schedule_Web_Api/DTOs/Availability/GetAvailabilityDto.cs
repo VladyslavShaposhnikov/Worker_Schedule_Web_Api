@@ -2,6 +2,7 @@
 {
     public class GetAvailabilityDto
     {
+        public Guid AvailabilityId { get; set; }
         public string? WorkerName { get; set; }
         public int WorkerInternalNumber { get; set; }
         public string? WorkerPosition { get; set; }
