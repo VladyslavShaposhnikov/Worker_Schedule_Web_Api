@@ -38,9 +38,17 @@ namespace Worker_Schedule_Web_Api.Controllers
             return result;
         }
 
+        [HttpPatch]
+        [Route("id/{id}")]
+        public async Task<ActionResult<GetAvailabilityDto>> UpdateFinishShiftHour([FromRoute] Guid id, [FromBody] UpdateFinishShiftHourDto dto)
+        {
+            var result = await availabilityService.UpdateFinishShiftHour(id, dto.FinishShiftHour);
+            return result;
+        }
+
         [HttpGet]
         [Route("available-workers/{date}")]
-        public async Task<List<GetAvailabilityDto>> GetAvailableWorkers([FromRoute] DateOnly date)
+        public async Task<ActionResult<List<GetAvailabilityDto>>> GetAvailableWorkers([FromRoute] DateOnly date)
         {
             var result = await availabilityService.GetAvailableWorkers(date);
             return result;
@@ -70,9 +78,10 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<GetAvailabilityDto>> UpdateAvailability(CreateUpdateAvailabilityDto form)
+        [Route("id/{id}")]
+        public async Task<ActionResult<GetAvailabilityDto>> UpdateAvailability([FromRoute] Guid id, [FromBody] CreateUpdateAvailabilityDto form)
         {
-            var result = await availabilityService.UpdateAvailability(form);
+            var result = await availabilityService.UpdateAvailability(id, form);
             return result;
         }
 

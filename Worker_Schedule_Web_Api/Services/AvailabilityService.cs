@@ -126,8 +126,17 @@ namespace Worker_Schedule_Web_Api.Services
             var worker = await GetWorker();
             var workingUnits = await context.WorkingUnits.ToListAsync();
 
-            var isDateExist = await context.Availabilities.AnyAsync(a => a.Date == date && a.WorkerId == worker.Id);
-            if (isDateExist) throw new DateAlreadyExistsException(date);
+            var availability = await context.Availabilities.Where(a => a.Date == date && a.WorkerId == worker.Id).FirstOrDefaultAsync();
+            if (availability != null)
+            {
+                var form = new CreateUpdateAvailabilityDto
+                {
+                    Date = availability.Date,
+                    From = new TimeOnly(0, 0),
+                    To = new TimeOnly(23, 59)
+                };
+                return await UpdateAvailability(availability.Id, form);
+            }
 
             var result = SetAvailability(worker, date, new TimeOnly(0, 0), new TimeOnly(23, 59), workingUnits);
             await context.SaveChangesAsync();
@@ -170,7 +179,7 @@ namespace Worker_Schedule_Web_Api.Services
             return res;
         }
 
-        public async Task<GetAvailabilityDto> UpdateAvailability(CreateUpdateAvailabilityDto form)
+        public async Task<GetAvailabilityDto> UpdateAvailability(Guid id, CreateUpdateAvailabilityDto form)
         {
             var worker = await GetWorker();
             var workingUnits = await context.WorkingUnits.ToListAsync();
@@ -191,18 +200,27 @@ namespace Worker_Schedule_Web_Api.Services
 
             var existingDates = await context.Availabilities
                 .Where(a => a.Date.Year == year && a.Date.Month == month && a.WorkerId == worker.Id)
-                .Select(a => a.Date)
+                .Select(a => new { Date = a.Date , Id = a.Id })
                 .ToListAsync();
 
 
             foreach (var availability in form)
             {
+                GetAvailabilityDto createdResult;
                 if (availability.Date.Year != year || availability.Date.Month != month) 
                     throw new InvalidAvailabilityDateException(availability.Date);
-                if (existingDates.Contains(availability.Date)) 
-                    throw new DateAlreadyExistsException(availability.Date);
+                
+                if (existingDates.Select(d => d.Date).Contains(availability.Date))
+                {
+                    var id = existingDates.First(d => d.Date == availability.Date).Id;
+                    createdResult = await UpdateAvailability(id, availability);
+                }
+                else
+                {
+                    createdResult = SetAvailability(worker, availability.Date, availability.From, availability.To, workingUnits);
+                }
 
-                result.Add(SetAvailability(worker, availability.Date, availability.From, availability.To, workingUnits));
+                result.Add(createdResult);
             }
 
             await context.SaveChangesAsync();
@@ -350,6 +368,30 @@ namespace Worker_Schedule_Web_Api.Services
                 })
                 .ToListAsync();
             return result;
+        }
+
+        public async Task<GetAvailabilityDto> UpdateFinishShiftHour(Guid id, TimeOnly finishShiftHour)
+        {
+            var availability = await context.Availabilities
+                .Include(a => a.WorkingUnit)
+                .Include(a => a.Worker)
+                .ThenInclude(w => w.Position)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (availability == null) throw new AvailabilityNotFoundException();
+
+            availability.WorkingUnit.To = finishShiftHour;
+
+            await context.SaveChangesAsync();
+            return new GetAvailabilityDto
+            {
+                Date = availability.Date,
+                From = availability.WorkingUnit.From,
+                To = availability.WorkingUnit.To,
+                WorkerInternalNumber = availability.Worker.WorkerInternalNumber,
+                WorkerName = $"{availability.Worker.FirstName} {availability.Worker.LastName}",
+                WorkerPosition = availability.Worker.Position?.Name ?? "not specified"
+            };
         }
     }
 }

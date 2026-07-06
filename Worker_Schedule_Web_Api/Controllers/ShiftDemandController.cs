@@ -12,6 +12,12 @@ namespace Worker_Schedule_Web_Api.Controllers
     [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
     public class ShiftDemandController(IShiftDemandService shiftDemandService) : ControllerBase
     {
+        [HttpGet]
+        public async Task<ActionResult<List<ShiftDemandDto>>> GetAllShiftDemands()
+        {
+            var result = await shiftDemandService.GetAllShiftDemands();
+            return result;
+        }
         /// <summary>
         /// Retrieves the list of shift demands for a specific date.
         /// </summary>

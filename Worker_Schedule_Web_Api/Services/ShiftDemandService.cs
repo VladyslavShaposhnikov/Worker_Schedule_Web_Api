@@ -15,6 +15,7 @@ namespace Worker_Schedule_Web_Api.Services
                 .Where(sd => sd.Date == date)
                 .Select(sd => new ShiftDemandDto
                 {
+                    ShiftDemandId = sd.Id,
                     Date = sd.Date,
                     From = sd.WorkingUnit.From,
                     To = sd.WorkingUnit.To,
@@ -75,15 +76,18 @@ namespace Worker_Schedule_Web_Api.Services
             foreach (var formItem in form)
             {
                 var workingUnit = CreateWorkingUnitIfNotExists(units, formItem.From, formItem.To);
+                Guid shiftDemandId = Guid.NewGuid();
 
                 context.ShiftDemands.Add(new ShiftDemand
                 {
+                    Id = shiftDemandId,
                     Date = formItem.Date,
                     WorkingUnit = workingUnit,
                     WorkersNeeded = formItem.WorkersNeeded
                 });
                 result.Add(new ShiftDemandDto
                     {
+                        ShiftDemandId = shiftDemandId,
                         Date = formItem.Date,
                         From = formItem.From,
                         To = formItem.To,
@@ -103,14 +107,18 @@ namespace Worker_Schedule_Web_Api.Services
 
             var workingUnit = CreateWorkingUnitIfNotExists(units, form.From, form.To);
 
+            Guid shiftDemandId = Guid.NewGuid();
+
             context.ShiftDemands.Add(new ShiftDemand
             {
+                Id = shiftDemandId,
                 Date = form.Date,
                 WorkingUnit = workingUnit,
                 WorkersNeeded = form.WorkersNeeded
             });
             result.Add(new ShiftDemandDto
             {
+                ShiftDemandId = shiftDemandId,
                 Date = form.Date,
                 From = form.From,
                 To = form.To,
@@ -149,12 +157,14 @@ namespace Worker_Schedule_Web_Api.Services
                 {
                     context.ShiftDemands.Add(new ShiftDemand
                     {
+                        Id = Guid.NewGuid(),
                         Date = date,
                         WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(6, 0), new TimeOnly(14, 0)),
                         WorkersNeeded = 3
                     });
                     context.ShiftDemands.Add(new ShiftDemand
                     {
+                        Id = Guid.NewGuid(),
                         Date = date,
                         WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(14, 0), new TimeOnly(21, 30)),
                         WorkersNeeded = 2
@@ -164,24 +174,28 @@ namespace Worker_Schedule_Web_Api.Services
                 {
                     context.ShiftDemands.Add(new ShiftDemand
                     {
+                        Id = Guid.NewGuid(),
                         Date = date,
                         WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(9, 30), new TimeOnly(17, 30)),
                         WorkersNeeded = 1
                     });
                     context.ShiftDemands.Add(new ShiftDemand
                     {
+                        Id = Guid.NewGuid(),
                         Date = date,
                         WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(9, 30), new TimeOnly(14, 30)),
                         WorkersNeeded = 1
                     });
                     context.ShiftDemands.Add(new ShiftDemand
                     {
+                        Id = Guid.NewGuid(),
                         Date = date,
                         WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(12, 0), new TimeOnly(20, 0)),
                         WorkersNeeded = 2
                     });
                     context.ShiftDemands.Add(new ShiftDemand
                     {
+                        Id = Guid.NewGuid(),
                         Date = date,
                         WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(14, 0), new TimeOnly(21, 30)),
                         WorkersNeeded = 3
@@ -191,12 +205,14 @@ namespace Worker_Schedule_Web_Api.Services
                 {
                     context.ShiftDemands.Add(new ShiftDemand
                     {
+                        Id = Guid.NewGuid(),
                         Date = date,
                         WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(9, 30), new TimeOnly(17, 30)),
                         WorkersNeeded = 2
                     });
                     context.ShiftDemands.Add(new ShiftDemand
                     {
+                        Id = Guid.NewGuid(),
                         Date = date,
                         WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(14, 0), new TimeOnly(21, 30)),
                         WorkersNeeded = 3
@@ -206,18 +222,21 @@ namespace Worker_Schedule_Web_Api.Services
                 {
                     context.ShiftDemands.Add(new ShiftDemand
                     {
+                        Id = Guid.NewGuid(),
                         Date = date,
                         WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(9, 30), new TimeOnly(17, 30)),
                         WorkersNeeded = 2
                     });
                     context.ShiftDemands.Add(new ShiftDemand
                     {
+                        Id = Guid.NewGuid(),
                         Date = date,
                         WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(17, 30), new TimeOnly(21, 30)),
                         WorkersNeeded = 1
                     });
                     context.ShiftDemands.Add(new ShiftDemand
                     {
+                        Id = Guid.NewGuid(),
                         Date = date,
                         WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(14, 30), new TimeOnly(21, 30)),
                         WorkersNeeded = 1
@@ -230,6 +249,7 @@ namespace Worker_Schedule_Web_Api.Services
                 .Where(sd => sd.Date >= startDate && sd.Date <= endDate)
                 .Select(sd => new ShiftDemandDto
                 {
+                    ShiftDemandId = sd.Id,
                     Date = sd.Date,
                     From = sd.WorkingUnit.From,
                     To = sd.WorkingUnit.To,
@@ -253,6 +273,20 @@ namespace Worker_Schedule_Web_Api.Services
             }
 
             return workingUnit;
+        }
+
+        public async Task<List<ShiftDemandDto>> GetAllShiftDemands()
+        {
+            return await context.ShiftDemands
+                .Select(sd => new ShiftDemandDto
+                {
+                    ShiftDemandId = sd.Id,
+                    Date = sd.Date,
+                    From = sd.WorkingUnit.From,
+                    To = sd.WorkingUnit.To,
+                    WorkersNeeded = sd.WorkersNeeded
+                })
+                .ToListAsync();
         }
     }
 }
