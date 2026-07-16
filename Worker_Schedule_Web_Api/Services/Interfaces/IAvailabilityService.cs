@@ -10,6 +10,7 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         Task<List<GetAvailabilityDto>> AvailabilitiesUser(string userId);
         Task<GetAvailabilityDto> GetAvailability(DateOnly date);
         Task<GetAvailabilityDto> UpdateFinishShiftHour(Guid id, TimeOnly finishShiftHour);
+        Task<GetAvailabilityDto> UpdateShift(Guid id, CreateUpdateAvailabilityDto form);
         Task<GetAvailabilityDto> CreateAvailability(CreateUpdateAvailabilityDto form);
         Task<List<GetAvailabilityDto>> CreateMonthAvailability(CreateUpdateAvailabilityDto[] form, int year, int month);
         Task<GetAvailabilityDto> UpdateAvailability(Guid id, CreateUpdateAvailabilityDto form);

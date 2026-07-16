@@ -381,10 +381,40 @@ namespace Worker_Schedule_Web_Api.Services
             if (availability == null) throw new AvailabilityNotFoundException();
 
             availability.WorkingUnit.To = finishShiftHour;
-
             await context.SaveChangesAsync();
+
             return new GetAvailabilityDto
             {
+                AvailabilityId = availability.Id,
+                Date = availability.Date,
+                From = availability.WorkingUnit.From,
+                To = availability.WorkingUnit.To,
+                WorkerInternalNumber = availability.Worker.WorkerInternalNumber,
+                WorkerName = $"{availability.Worker.FirstName} {availability.Worker.LastName}",
+                WorkerPosition = availability.Worker.Position?.Name ?? "not specified"
+            };
+        }
+
+        public async Task<GetAvailabilityDto> UpdateShift(Guid id, CreateUpdateAvailabilityDto form)
+        {
+            var availability = await context.Availabilities
+                .Include(a => a.WorkingUnit)
+                .Include(a => a.Worker)
+                .ThenInclude(w => w.Position)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (availability == null) throw new AvailabilityNotFoundException();
+
+            var workingUnit = CreateWorkingUnitIfNotExists(await context.WorkingUnits.ToListAsync(), form.From, form.To);
+
+            availability.Date = form.Date;
+            availability.WorkingUnit = workingUnit;
+
+            await context.SaveChangesAsync();
+
+            return new GetAvailabilityDto
+            {
+                AvailabilityId = availability.Id,
                 Date = availability.Date,
                 From = availability.WorkingUnit.From,
                 To = availability.WorkingUnit.To,

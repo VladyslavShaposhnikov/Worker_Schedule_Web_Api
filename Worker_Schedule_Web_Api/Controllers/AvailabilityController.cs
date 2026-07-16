@@ -46,6 +46,14 @@ namespace Worker_Schedule_Web_Api.Controllers
             return result;
         }
 
+        [HttpPut]
+        [Route("id/{id}/update")]
+        public async Task<ActionResult<GetAvailabilityDto>> UpdateShift([FromRoute] Guid id, [FromBody] CreateUpdateAvailabilityDto dto)
+        {
+            var result = await availabilityService.UpdateShift(id, dto);
+            return result;
+        }
+
         [HttpGet]
         [Route("available-workers/{date}")]
         public async Task<ActionResult<List<GetAvailabilityDto>>> GetAvailableWorkers([FromRoute] DateOnly date)
