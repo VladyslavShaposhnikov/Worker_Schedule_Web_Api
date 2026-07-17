@@ -144,15 +144,30 @@ namespace Worker_Schedule_Web_Api.Services
             var startDate = new DateOnly(year, month, 1);
             var endDate = new DateOnly(year, month, DateTime.DaysInMonth(year, month));
 
-            var isAlreadyHaveShiftDemand = await context.ShiftDemands.AnyAsync(sd => sd.Date >= startDate && sd.Date <= endDate);
+            //var isAlreadyHaveShiftDemand = await context.ShiftDemands.AnyAsync(sd => sd.Date >= startDate && sd.Date <= endDate);
 
-            if (isAlreadyHaveShiftDemand) throw new MonthAlreadyHasShiftDemandsException();
+            //if (isAlreadyHaveShiftDemand) throw new MonthAlreadyHasShiftDemandsException();
+
+            var haveShiftDemandList = await context
+                .ShiftDemands
+                .Where(sd => sd.Date.Year == year && sd.Date.Month == month)
+                .Select(sd => sd.Date)
+                .ToHashSetAsync();
+
+            Console.WriteLine("============================== look here ==============================");
+            Console.WriteLine(string.Join(", ", haveShiftDemandList));
 
             var units = await context.WorkingUnits.ToListAsync();
 
             foreach (var day in Enumerable.Range(1, DateTime.DaysInMonth(year, month)))
             {
                 var date = new DateOnly(year, month, day);
+
+                if (haveShiftDemandList.Contains(date))
+                {
+                    continue; // Skip if shift demand already exists for this date
+                }
+
                 if (date.DayOfWeek == DayOfWeek.Monday || date.DayOfWeek == DayOfWeek.Thursday)
                 {
                     context.ShiftDemands.Add(new ShiftDemand
