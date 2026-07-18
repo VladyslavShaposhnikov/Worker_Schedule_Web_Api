@@ -48,6 +48,11 @@ namespace Worker_Schedule_Web_Api.Services
                     shiftDemand.WorkersNeeded--;
                     await context.SaveChangesAsync();
                 }
+                if (shiftDemand.WorkersNeeded == 0)
+                {
+                    context.ShiftDemands.Remove(shiftDemand);
+                    await context.SaveChangesAsync();
+                }
             }
         }
 
@@ -99,34 +104,33 @@ namespace Worker_Schedule_Web_Api.Services
             return result;
         }
 
-        public async Task<List<ShiftDemandDto>> CreateSingleShiftDemand(ShiftDemandDto form)
+        public async Task<ShiftDemandDto> CreateSingleShiftDemand(ShiftDemandDto form)
         {
-            var result = new List<ShiftDemandDto>();
-
             var units = await context.WorkingUnits.ToListAsync();
 
             var workingUnit = CreateWorkingUnitIfNotExists(units, form.From, form.To);
 
             Guid shiftDemandId = Guid.NewGuid();
 
-            context.ShiftDemands.Add(new ShiftDemand
+            var shiftDemand = new ShiftDemand
             {
                 Id = shiftDemandId,
                 Date = form.Date,
                 WorkingUnit = workingUnit,
                 WorkersNeeded = form.WorkersNeeded
-            });
-            result.Add(new ShiftDemandDto
+            };
+
+            context.ShiftDemands.Add(shiftDemand);
+            await context.SaveChangesAsync();
+
+            return new ShiftDemandDto
             {
                 ShiftDemandId = shiftDemandId,
                 Date = form.Date,
                 From = form.From,
                 To = form.To,
                 WorkersNeeded = form.WorkersNeeded
-            });
-            await context.SaveChangesAsync();
-
-            return result;
+            };
         }
 
         public async Task DeleteShiftDemand(DateOnly date)
@@ -144,18 +148,11 @@ namespace Worker_Schedule_Web_Api.Services
             var startDate = new DateOnly(year, month, 1);
             var endDate = new DateOnly(year, month, DateTime.DaysInMonth(year, month));
 
-            //var isAlreadyHaveShiftDemand = await context.ShiftDemands.AnyAsync(sd => sd.Date >= startDate && sd.Date <= endDate);
-
-            //if (isAlreadyHaveShiftDemand) throw new MonthAlreadyHasShiftDemandsException();
-
             var haveShiftDemandList = await context
                 .ShiftDemands
                 .Where(sd => sd.Date.Year == year && sd.Date.Month == month)
                 .Select(sd => sd.Date)
                 .ToHashSetAsync();
-
-            Console.WriteLine("============================== look here ==============================");
-            Console.WriteLine(string.Join(", ", haveShiftDemandList));
 
             var units = await context.WorkingUnits.ToListAsync();
 

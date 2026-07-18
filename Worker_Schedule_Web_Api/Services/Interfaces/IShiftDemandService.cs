@@ -13,7 +13,7 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         Task<List<ShiftDemandDto>> GetMonthShiftDemand(int year, int month);
         Task IncreaseShiftDemandWorker(Guid id);
         Task DecreaseShiftDemandWorker(Guid id);
-        Task<List<ShiftDemandDto>> CreateSingleShiftDemand(ShiftDemandDto form);
+        Task<ShiftDemandDto> CreateSingleShiftDemand(ShiftDemandDto form);
         Task DeleteShiftDemandById(Guid id);
     }
 }

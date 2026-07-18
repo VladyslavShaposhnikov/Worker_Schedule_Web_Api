@@ -61,7 +61,7 @@ namespace Worker_Schedule_Web_Api.Controllers
         /// </summary>
         [HttpPost]
         [Route("single")]
-        public async Task<ActionResult<List<ShiftDemandDto>>> CreateSingleShiftDemand(ShiftDemandDto form)
+        public async Task<ActionResult<ShiftDemandDto>> CreateSingleShiftDemand(ShiftDemandDto form)
         {
             var result = await shiftDemandService.CreateSingleShiftDemand(form);
             return StatusCode(201, result);
