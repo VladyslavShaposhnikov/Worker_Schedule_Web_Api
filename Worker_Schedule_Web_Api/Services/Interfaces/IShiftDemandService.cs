@@ -15,5 +15,6 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         Task DecreaseShiftDemandWorker(Guid id);
         Task<ShiftDemandDto> CreateSingleShiftDemand(ShiftDemandDto form);
         Task DeleteShiftDemandById(Guid id);
+        Task DeleteShiftDemandsByDays(List<DateOnly> days);
     }
 }

@@ -78,6 +78,16 @@ namespace Worker_Schedule_Web_Api.Services
 
             var units = await context.WorkingUnits.ToListAsync();
 
+            var existingShiftDemandsDays = await context.ShiftDemands
+                .Where(sd => form.Select(f => f.Date).Contains(sd.Date))
+                .Select(sd => sd.Date)
+                .ToHashSetAsync();
+
+            foreach (var day in existingShiftDemandsDays)
+            {
+                await DeleteShiftDemand(day);
+            }
+
             foreach (var formItem in form)
             {
                 var workingUnit = CreateWorkingUnitIfNotExists(units, formItem.From, formItem.To);
@@ -141,6 +151,11 @@ namespace Worker_Schedule_Web_Api.Services
         public async Task DeleteShiftDemandById(Guid id)
         {
             await context.ShiftDemands.Where(sd => sd.Id == id).ExecuteDeleteAsync();
+        }
+
+        public async Task DeleteShiftDemandsByDays(List<DateOnly> days)
+        {
+            await context.ShiftDemands.Where(sd => days.Contains(sd.Date)).ExecuteDeleteAsync();
         }
 
         public async Task<List<ShiftDemandDto>> SetDefaultShiftsMonth(int year, int month)

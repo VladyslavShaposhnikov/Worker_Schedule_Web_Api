@@ -100,6 +100,17 @@ namespace Worker_Schedule_Web_Api.Controllers
         }
 
         /// <summary>
+        /// Deletes all shift demands for all days in given list.
+        /// </summary>
+        [HttpDelete]
+        [Route("days")]
+        public async Task<ActionResult> DeleteShiftDemandsByDays([FromBody] List<DateOnly> days)
+        {
+            await shiftDemandService.DeleteShiftDemandsByDays(days);
+            return NoContent();
+        }
+
+        /// <summary>
         /// Deletes all shift demands by Id.
         /// </summary>
         [HttpDelete]
