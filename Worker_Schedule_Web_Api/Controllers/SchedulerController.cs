@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Worker_Schedule_Web_Api.DTOs.Availability;
 using Worker_Schedule_Web_Api.DTOs.Schedule;
 using Worker_Schedule_Web_Api.Models.Identity;
+using Worker_Schedule_Web_Api.Models.Schedule;
 using Worker_Schedule_Web_Api.Services.Interfaces;
 
 namespace Worker_Schedule_Web_Api.Controllers
@@ -61,6 +62,15 @@ namespace Worker_Schedule_Web_Api.Controllers
         public async Task<List<WorkersLookupDto>> GetWorkersLookup()
         {
             var result = await scheduler.WorkersLookup();
+            return result;
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("missing-shifts/{date}")]
+        public async Task<List<SchedulingDemand>> GetMissingShifts([FromRoute] DateOnly date)
+        {
+            var result = await scheduler.GetMissingShifts(date);
             return result;
         }
 

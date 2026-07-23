@@ -361,6 +361,46 @@ namespace Worker_Schedule_Web_Api.Services
             return workers;
         }
 
+        public async Task<List<SchedulingDemand>> GetMissingShifts(DateOnly date)
+        {
+            var result = new List<SchedulingDemand>();
+
+            var schedules = await context.Schedules
+                .Include(s => s.WorkingUnit)
+                .Where(s => s.Date == date)
+                .ToListAsync();
+            var demands = await context.ShiftDemands
+                .Include(s => s.WorkingUnit)
+                .Where(sd => sd.Date == date)
+                .ToListAsync();
+
+            foreach (var demand in demands)
+            {
+                var from30 = demand.WorkingUnit.From.AddMinutes(30);
+                var to30 = demand.WorkingUnit.To.AddMinutes(-30);
+
+                var scheduledIds = schedules
+                    .Where(s => s.WorkingUnit.From <= from30 && s.WorkingUnit.To >= to30)
+                    .Select(s => s.Id)
+                    .Take(demand.WorkersNeeded);
+
+                var scheduledCount = scheduledIds.Count();
+
+                if (scheduledCount < demand.WorkersNeeded)
+                {
+                    result.Add(new SchedulingDemand
+                    {
+                        Date = demand.Date,
+                        From = demand.WorkingUnit.From,
+                        To = demand.WorkingUnit.To,
+                        WorkersNeeded = demand.WorkersNeeded - scheduledCount
+                    });
+                }
+                schedules.RemoveAll(s => scheduledIds.Contains(s.Id)); // Remove scheduled shifts from the list
+            }
+            return result;
+        }
+
         private WorkingUnit CreateWorkingUnitIfNotExists(List<WorkingUnit> workingUnits, TimeOnly from, TimeOnly to)
         {
             var workingUnit = workingUnits
