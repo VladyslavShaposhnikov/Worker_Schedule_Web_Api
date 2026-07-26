@@ -11,5 +11,6 @@ namespace Worker_Schedule_Web_Api.DTOs.Schedule
         public string LastName { get; set; }
         public string? Position { get; set; }
         public double WorkedHours { get; set; }
+        public int FullTimeHours { get; set; }
     }
 }

@@ -258,6 +258,30 @@ namespace Worker_Schedule_Web_Api.Services
                 })
                 .ToListAsync();
 
+            // Get unique dates from the result to check for missing shifts
+            var dates = result.Select(s => s.Date).ToHashSet();
+
+            // For each date, get the missing shifts and add them to the result
+            foreach (var date in dates)
+            {
+                var toAdd = await GetMissingShifts(date);
+                foreach (var item in toAdd)
+                {
+                    for (int i = 0; i < item.WorkersNeeded; i++)
+                    {
+                        result.Add(new ScheduleDto
+                        {
+                            ScheduleId = Guid.NewGuid(),
+                            Date = item.Date,
+                            From = item.From,
+                            To = item.To,
+                            WorkerInternalNumber = 0,
+                            FullName = "Missing shift"
+                        });
+                    }
+                }
+            }
+
             return result;
         }
 
@@ -325,7 +349,8 @@ namespace Worker_Schedule_Web_Api.Services
                 FirstName = w.FirstName,
                 LastName = w.LastName,
                 Position = w.Position.Name,
-                WorkedHours = hoursSum.GetValueOrDefault(w.Id, 0)
+                WorkedHours = hoursSum.GetValueOrDefault(w.Id, 0),
+                FullTimeHours = configuration.GetValue<int>("MonthWorkerHours", 168)
             }).ToListAsync();
 
             return res;
@@ -368,10 +393,12 @@ namespace Worker_Schedule_Web_Api.Services
             var schedules = await context.Schedules
                 .Include(s => s.WorkingUnit)
                 .Where(s => s.Date == date)
+                .AsNoTracking()
                 .ToListAsync();
             var demands = await context.ShiftDemands
                 .Include(s => s.WorkingUnit)
                 .Where(sd => sd.Date == date)
+                .AsNoTracking()
                 .ToListAsync();
 
             foreach (var demand in demands)
@@ -382,19 +409,23 @@ namespace Worker_Schedule_Web_Api.Services
                 var scheduledIds = schedules
                     .Where(s => s.WorkingUnit.From <= from30 && s.WorkingUnit.To >= to30)
                     .Select(s => s.Id)
-                    .Take(demand.WorkersNeeded);
+                    .Take(demand.WorkersNeeded)
+                    .ToHashSet();
 
                 var scheduledCount = scheduledIds.Count();
 
                 if (scheduledCount < demand.WorkersNeeded)
                 {
-                    result.Add(new SchedulingDemand
+                    for(int i = 0; i < demand.WorkersNeeded - scheduledCount; i++) // every missing shift is added as a separate entry in the result list
                     {
-                        Date = demand.Date,
-                        From = demand.WorkingUnit.From,
-                        To = demand.WorkingUnit.To,
-                        WorkersNeeded = demand.WorkersNeeded - scheduledCount
-                    });
+                        result.Add(new SchedulingDemand
+                        {
+                            Date = demand.Date,
+                            From = demand.WorkingUnit.From,
+                            To = demand.WorkingUnit.To,
+                            WorkersNeeded = 1
+                        });
+                    }
                 }
                 schedules.RemoveAll(s => scheduledIds.Contains(s.Id)); // Remove scheduled shifts from the list
             }
