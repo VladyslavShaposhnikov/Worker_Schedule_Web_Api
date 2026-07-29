@@ -30,6 +30,15 @@ namespace Worker_Schedule_Web_Api.Controllers
             return StatusCode(201, result);
         }
 
+        [HttpDelete]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
+        [Route("dates-range")]
+        public async Task<ActionResult> DeleteSchedulesByDaysRange([FromBody] BulkDeleteSchedulesDto dto)
+        {
+            await scheduler.DeleteSchedulesByDaysRangeAndUsers(dto);
+            return NoContent();
+        }
+
         [HttpPost]
         [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [Route("add-single-worker")]

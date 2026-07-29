@@ -12,7 +12,6 @@ namespace Worker_Schedule_Web_Api.Services
         AppDbContext context, 
         ISchedulingAlgorithm schedulingAlgorithm, 
         IScheduleMonthAlgorithm scheduleMonthAlgorithm,
-        ISchedulingSaturdayAlgorithm schedulingSaturdayAlgorithm,
         IConfiguration configuration) : IScheduler
     {
         public async Task<List<ScheduleDto>> CreateDaySchedule(DateOnly date)
@@ -316,6 +315,20 @@ namespace Worker_Schedule_Web_Api.Services
             await context.Schedules
                 .Where(s => s.Date == date)
                 .ExecuteDeleteAsync();
+        }
+
+        public async Task DeleteSchedulesByDaysRangeAndUsers(BulkDeleteSchedulesDto dto)
+        {
+            foreach (var date in dto.Dates)
+            {
+                if (dto.WorkersIds != null && dto.WorkersIds.Count > 0)
+                {
+                    await context.Schedules
+                        .Include(s => s.Worker)
+                        .Where(s => s.Date == date && dto.WorkersIds.Contains(s.Worker.WorkerInternalNumber))
+                        .ExecuteDeleteAsync();
+                }
+            }
         }
 
         public async Task DeleteMonthSchedule(int year, int month)

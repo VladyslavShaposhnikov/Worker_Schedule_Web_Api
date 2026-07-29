@@ -78,16 +78,6 @@ namespace Worker_Schedule_Web_Api.Services
 
             var units = await context.WorkingUnits.ToListAsync();
 
-            var existingShiftDemandsDays = await context.ShiftDemands
-                .Where(sd => form.Select(f => f.Date).Contains(sd.Date))
-                .Select(sd => sd.Date)
-                .ToHashSetAsync();
-
-            foreach (var day in existingShiftDemandsDays)
-            {
-                await DeleteShiftDemand(day);
-            }
-
             foreach (var formItem in form)
             {
                 var workingUnit = CreateWorkingUnitIfNotExists(units, formItem.From, formItem.To);
