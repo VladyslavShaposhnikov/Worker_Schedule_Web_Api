@@ -22,6 +22,11 @@ namespace Worker_Schedule_Web_Api.Services
                 .Where(s => s.Date.Year == date.Year && s.Date.Month == date.Month)
                 .ToListAsync();
 
+            var workedToday = schedules
+                .Where(s => s.Date == date)
+                .Select(s => s.WorkerId)
+                .ToList();
+
             var hoursSum = schedules
                 .GroupBy(s => s.WorkerId)
                 .ToDictionary(d => d.Key, d => d.Sum(s => (s.WorkingUnit.To - s.WorkingUnit.From).TotalHours));
@@ -40,7 +45,7 @@ namespace Worker_Schedule_Web_Api.Services
             int monthWorkerHours = configuration.GetValue<int>("MonthWorkerHours", 160);
 
             var workers = await context.Availabilities
-                .Where(a => a.Date == date)
+                .Where(a => a.Date == date && !workedToday.Contains(a.WorkerId))
                 .Select(a => new SchedulingWorker
                 {
                     Date = a.Date,
@@ -258,7 +263,7 @@ namespace Worker_Schedule_Web_Api.Services
                 .ToListAsync();
 
             // Get unique dates from the result to check for missing shifts
-            var dates = result.Select(s => s.Date).ToHashSet();
+            var dates = await context.ShiftDemands.AsNoTracking().Select(s => s.Date).ToHashSetAsync();
 
             // For each date, get the missing shifts and add them to the result
             foreach (var date in dates)
@@ -281,7 +286,7 @@ namespace Worker_Schedule_Web_Api.Services
                 }
             }
 
-            return result;
+            return result.OrderBy(s => s.Date).ThenBy(s => s.From).ToList();
         }
 
         public async Task<List<ScheduleDto>> GetUserSchedules(Guid userId)

@@ -19,5 +19,6 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         Task DayOffAvailability(DateOnly date);
         Task<List<GetAvailabilityDto>> GetMonthAvailability(int year, int month);
         Task<List<GetAvailabilityDto>> GetAvailableWorkers(DateOnly date);
+        Task DeleteBulkAvailability(DateOnly[] dates);
     }
 }

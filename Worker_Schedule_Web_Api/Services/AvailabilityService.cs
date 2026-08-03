@@ -228,6 +228,20 @@ namespace Worker_Schedule_Web_Api.Services
             return result;
         }
 
+        public async Task DeleteBulkAvailability(DateOnly[] dates)
+        {
+            var worker = await GetWorker();
+            var availabilities = await context.Availabilities
+                .Where(a => dates.Contains(a.Date) && a.WorkerId == worker.Id)
+                .ToListAsync();
+            if (availabilities.Count == 0)
+            {
+                return;
+            }
+            context.Availabilities.RemoveRange(availabilities);
+            await context.SaveChangesAsync();
+        }
+
         public async Task<List<GetAvailabilityDto>> GetMonthAvailability(int year, int month)
         {
             var worker = await GetWorker();

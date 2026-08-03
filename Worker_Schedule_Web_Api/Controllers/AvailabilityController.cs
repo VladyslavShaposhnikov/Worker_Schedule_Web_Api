@@ -116,5 +116,13 @@ namespace Worker_Schedule_Web_Api.Controllers
             await availabilityService.DayOffAvailability(date);
             return NoContent();
         }
+
+        [HttpDelete]
+        [Route("bulk-delete")]
+        public async Task<ActionResult> DeleteBulkAvailability([FromBody] DateOnly[] dates)
+        {
+            await availabilityService.DeleteBulkAvailability(dates);
+            return NoContent();
+        }
     }
 }
