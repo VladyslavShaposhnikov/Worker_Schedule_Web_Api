@@ -127,5 +127,14 @@ namespace Worker_Schedule_Web_Api.Controllers
             await scheduler.DeleteMonthSchedule(year, month);
             return NoContent();
         }
+
+        [HttpPut]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
+        [Route("{id:guid}")]
+        public async Task<ActionResult<ScheduleDto>> UpdateSchedule([FromRoute] Guid id, [FromBody] UpdateScheduleDto scheduleDto)
+        {
+            var result = await scheduler.UpdateSchedule(id, scheduleDto);
+            return result;
+        }
     }
 }

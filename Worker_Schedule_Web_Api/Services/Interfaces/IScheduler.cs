@@ -19,5 +19,6 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         Task<List<ScheduleDto>> MonthSchedule(int year, int month);
         Task<List<WorkersLookupDto>> WorkersLookup();
         Task DeleteSchedulesByDaysRangeAndUsers(BulkDeleteSchedulesDto dto);
+        Task<ScheduleDto> UpdateSchedule(Guid id, UpdateScheduleDto scheduleDto);
     }
 }

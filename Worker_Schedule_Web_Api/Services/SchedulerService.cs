@@ -450,6 +450,29 @@ namespace Worker_Schedule_Web_Api.Services
             return result;
         }
 
+        public async Task<ScheduleDto> UpdateSchedule(Guid id, UpdateScheduleDto scheduleDto)
+        {
+            var schedule = await context.Schedules
+                .Include(s => s.WorkingUnit)
+                .Include(s => s.Worker)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (schedule == null) throw new Exception($"Schedule with id {id} not found");
+            var workingUnits = await context.WorkingUnits.ToListAsync();
+            var workingUnit = CreateWorkingUnitIfNotExists(workingUnits, scheduleDto.From, scheduleDto.To);
+            schedule.Date = scheduleDto.Date;
+            schedule.WorkingUnit = workingUnit;
+            await context.SaveChangesAsync();
+            return new ScheduleDto
+            {
+                Date = schedule.Date,
+                From = schedule.WorkingUnit.From,
+                To = schedule.WorkingUnit.To,
+                WorkerInternalNumber = schedule.Worker.WorkerInternalNumber,
+                FullName = $"{schedule.Worker.FirstName} {schedule.Worker.LastName}",
+                ScheduleId = schedule.Id
+            };
+        }
+
         private WorkingUnit CreateWorkingUnitIfNotExists(List<WorkingUnit> workingUnits, TimeOnly from, TimeOnly to)
         {
             var workingUnit = workingUnits
