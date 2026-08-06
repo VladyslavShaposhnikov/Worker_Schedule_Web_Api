@@ -136,5 +136,14 @@ namespace Worker_Schedule_Web_Api.Controllers
             var result = await scheduler.UpdateSchedule(id, scheduleDto);
             return result;
         }
+
+        [HttpPatch]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
+        [Route("{id:guid}/finish-time")]
+        public async Task<ActionResult<ScheduleDto>> UpdateFinishTime([FromRoute] Guid id, [FromBody] UpdateFinishShiftHourDto dto)
+        {
+            var result = await scheduler.UpdateFinishTime(id, dto.FinishShiftHour);
+            return result;
+        }
     }
 }
