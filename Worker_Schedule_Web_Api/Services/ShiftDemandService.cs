@@ -321,6 +321,19 @@ namespace Worker_Schedule_Web_Api.Services
                 .ToListAsync();
         }
 
+        public async Task<double> GetAllShiftHoursSum(int year, int month)
+        {
+            var selectedDemands = await context.ShiftDemands
+                .Where(sd => sd.Date.Year == year && sd.Date.Month == month)
+                .Select(sd => new
+                {
+                    From = sd.WorkingUnit.From,
+                    To = sd.WorkingUnit.To,
+                    WorkersNeeded = sd.WorkersNeeded
+                }).ToListAsync();
+            return selectedDemands.Sum(x => (double)(x.To - x.From).TotalHours * x.WorkersNeeded);
+        }
+
         private ShiftDemandDto addIfExists(WorkingUnit workingUnit, DateOnly date, int workersNeeded)
         {
             var existingShiftDemand = context.ShiftDemands

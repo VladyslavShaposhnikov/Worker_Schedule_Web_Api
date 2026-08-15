@@ -16,5 +16,6 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         Task<ShiftDemandDto> CreateSingleShiftDemand(ShiftDemandDto form);
         Task DeleteShiftDemandById(Guid id);
         Task DeleteShiftDemandsByDays(List<DateOnly> days);
+        Task<double> GetAllShiftHoursSum(int year, int month);
     }
 }

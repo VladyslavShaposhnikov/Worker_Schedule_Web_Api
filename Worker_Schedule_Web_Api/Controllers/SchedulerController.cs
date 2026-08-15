@@ -55,7 +55,7 @@ namespace Worker_Schedule_Web_Api.Controllers
             var result = await scheduler.GetSchedules(filter);
             return result;
         }
-        
+
         [HttpGet]
         [Authorize]
         [Route("user")]
@@ -86,7 +86,7 @@ namespace Worker_Schedule_Web_Api.Controllers
         [HttpGet]
         [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [Route("summary/{year:int}/{month:int}")]
-        public async Task<List<SummaryByWorkers>> GetWorkerScheduleSummary([FromRoute] int year,[FromRoute] int month)
+        public async Task<List<SummaryByWorkers>> GetWorkerScheduleSummary([FromRoute] int year, [FromRoute] int month)
         {
             var result = await scheduler.WorkersSummary(year, month);
             return result;
@@ -104,7 +104,7 @@ namespace Worker_Schedule_Web_Api.Controllers
         [HttpDelete]
         [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [Route("{scheduleId:guid}")]
-        public async Task<ActionResult> DeleteScheduleById([FromRoute]Guid scheduleId)
+        public async Task<ActionResult> DeleteScheduleById([FromRoute] Guid scheduleId)
         {
             await scheduler.DeleteScheduleShift(scheduleId);
             return NoContent();
@@ -143,6 +143,15 @@ namespace Worker_Schedule_Web_Api.Controllers
         public async Task<ActionResult<ScheduleDto>> UpdateFinishTime([FromRoute] Guid id, [FromBody] UpdateFinishShiftHourDto dto)
         {
             var result = await scheduler.UpdateFinishTime(id, dto.FinishShiftHour);
+            return result;
+        }
+
+        [HttpGet]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
+        [Route("total-scheduled-hours/{year:int}/{month:int}")]
+        public async Task<ActionResult<double>> GetTotalScheduledHours([FromRoute] int year, [FromRoute] int month)
+        {
+            var result = await scheduler.GetTotalScheduledHours(year, month);
             return result;
         }
     }

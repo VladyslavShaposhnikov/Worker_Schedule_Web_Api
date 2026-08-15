@@ -120,5 +120,16 @@ namespace Worker_Schedule_Web_Api.Controllers
             await shiftDemandService.DeleteShiftDemandById(id);
             return NoContent();
         }
+
+        /// <summary>
+        /// Retrieves the sum of all shift hours.
+        /// </summary>
+        [HttpGet]
+        [Route("hours-sum/{year:int}/{month:int}")]
+        public async Task<ActionResult<double>> GetAllShiftHoursSum([FromRoute] int year, [FromRoute] int month)
+        {
+            var result = await shiftDemandService.GetAllShiftHoursSum(year, month);
+            return result;
+        }
     }
 }

@@ -497,6 +497,18 @@ namespace Worker_Schedule_Web_Api.Services
             };
         }
 
+        public async Task<double> GetTotalScheduledHours(int year, int month)
+        {
+            var selectedSchedules = await context.Schedules
+                .Where(s => s.Date.Year == year && s.Date.Month == month)
+                .Select(s => new
+                {
+                    from = s.WorkingUnit.From,
+                    to = s.WorkingUnit.To
+                }).ToListAsync();
+            return selectedSchedules.Sum(s => (double)(s.to - s.from).TotalHours);
+        }
+
         private WorkingUnit CreateWorkingUnitIfNotExists(List<WorkingUnit> workingUnits, TimeOnly from, TimeOnly to)
         {
             var workingUnit = workingUnits
