@@ -20,7 +20,7 @@ namespace Worker_Schedule_Web_Api.Extensions
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IScheduler, SchedulerService>();
             services.AddScoped<IShiftDemandService, ShiftDemandService>();
-            services.AddScoped<ISchedulingAlgorithm, SchedulingAlgorithm>();
+            services.AddScoped<ISchedulingAlgorithm, SchedulingAlgorithmV2>();
             services.AddScoped<IScheduleMonthAlgorithm, ScheduleMonthAlgorithm>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ISchedulingSaturdayAlgorithm, SchedulingSaturdayAlgorithm>();

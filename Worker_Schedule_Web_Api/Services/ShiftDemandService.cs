@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Worker_Schedule_Web_Api.Data;
 using Worker_Schedule_Web_Api.DTOs.ShiftDemand;
-using Worker_Schedule_Web_Api.Exceptions;
 using Worker_Schedule_Web_Api.Models.Domain;
 using Worker_Schedule_Web_Api.Services.Interfaces;
 
@@ -81,6 +80,14 @@ namespace Worker_Schedule_Web_Api.Services
             foreach (var formItem in form)
             {
                 var workingUnit = CreateWorkingUnitIfNotExists(units, formItem.From, formItem.To);
+
+                var existingShiftDemand = addIfExists(workingUnit, formItem.Date, formItem.WorkersNeeded);
+                if (existingShiftDemand != null)
+                {
+                    result.Add(existingShiftDemand);
+                    continue;
+                }
+
                 Guid shiftDemandId = Guid.NewGuid();
 
                 context.ShiftDemands.Add(new ShiftDemand
@@ -109,6 +116,14 @@ namespace Worker_Schedule_Web_Api.Services
             var units = await context.WorkingUnits.ToListAsync();
 
             var workingUnit = CreateWorkingUnitIfNotExists(units, form.From, form.To);
+
+            var existingShiftDemand = addIfExists(workingUnit, form.Date, form.WorkersNeeded);
+
+            if (existingShiftDemand != null)
+            {
+                await context.SaveChangesAsync();
+                return existingShiftDemand;
+            }
 
             Guid shiftDemandId = Guid.NewGuid();
 
@@ -183,7 +198,7 @@ namespace Worker_Schedule_Web_Api.Services
                     {
                         Id = Guid.NewGuid(),
                         Date = date,
-                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(14, 0), new TimeOnly(21, 30)),
+                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(13, 30), new TimeOnly(21, 30)),
                         WorkersNeeded = 2
                     });
                 }
@@ -214,7 +229,7 @@ namespace Worker_Schedule_Web_Api.Services
                     {
                         Id = Guid.NewGuid(),
                         Date = date,
-                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(14, 0), new TimeOnly(21, 30)),
+                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(13, 30), new TimeOnly(21, 30)),
                         WorkersNeeded = 3
                     });
                 }
@@ -231,7 +246,7 @@ namespace Worker_Schedule_Web_Api.Services
                     {
                         Id = Guid.NewGuid(),
                         Date = date,
-                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(14, 0), new TimeOnly(21, 30)),
+                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(13, 30), new TimeOnly(21, 30)),
                         WorkersNeeded = 3
                     });
                 }
@@ -255,7 +270,7 @@ namespace Worker_Schedule_Web_Api.Services
                     {
                         Id = Guid.NewGuid(),
                         Date = date,
-                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(14, 30), new TimeOnly(21, 30)),
+                        WorkingUnit = CreateWorkingUnitIfNotExists(units, new TimeOnly(13, 30), new TimeOnly(21, 30)),
                         WorkersNeeded = 1
                     });
                 }
@@ -304,6 +319,26 @@ namespace Worker_Schedule_Web_Api.Services
                     WorkersNeeded = sd.WorkersNeeded
                 })
                 .ToListAsync();
+        }
+
+        private ShiftDemandDto addIfExists(WorkingUnit workingUnit, DateOnly date, int workersNeeded)
+        {
+            var existingShiftDemand = context.ShiftDemands
+                .Include(sd => sd.WorkingUnit)
+                .FirstOrDefault(sd => sd.Date == date && sd.WorkingUnit.From == workingUnit.From && sd.WorkingUnit.To == workingUnit.To);
+            if (existingShiftDemand != null)
+            {
+                existingShiftDemand.WorkersNeeded += workersNeeded;
+                return new ShiftDemandDto
+                {
+                    ShiftDemandId = existingShiftDemand.Id,
+                    Date = existingShiftDemand.Date,
+                    From = existingShiftDemand.WorkingUnit.From,
+                    To = existingShiftDemand.WorkingUnit.To,
+                    WorkersNeeded = existingShiftDemand.WorkersNeeded
+                };
+            }
+            return null;
         }
     }
 }

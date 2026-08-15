@@ -43,7 +43,7 @@ namespace Worker_Schedule_Web_Api.Services
                 })
                 .ToListAsync();
 
-            int monthWorkerHours = configuration.GetValue<int>("MonthWorkerHours", 160);
+            int monthWorkerHours = configuration.GetValue<int>("MonthWorkerHours", 168);
 
             var workers = await context.Availabilities
                 .Where(a => a.Date == date && !workedToday.Contains(a.WorkerId))
@@ -56,7 +56,8 @@ namespace Worker_Schedule_Web_Api.Services
                     WorkerInternalNumber = a.Worker.WorkerInternalNumber,
                     WorkerId = a.WorkerId,
                     FullName = $"{a.Worker.FirstName} {a.Worker.LastName}",
-                    Position = a.Worker.Position.Name
+                    Position = a.Worker.Position.Name,
+                    EmploymentPercentage = a.Worker.EmploymentPercentage
                 })
                 .ToListAsync();
 

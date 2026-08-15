@@ -50,7 +50,8 @@ namespace Worker_Schedule_Web_Api.Services
                         WorkerInternalNumber = a?.Worker?.WorkerInternalNumber ?? 0,
                         WorkerId = a?.WorkerId ?? Guid.Empty,
                         FullName = $"{a?.Worker?.FirstName} {a?.Worker?.LastName}",
-                        Position = a?.Worker?.Position?.Name
+                        Position = a?.Worker?.Position?.Name,
+                        EmploymentPercentage = a?.Worker?.EmploymentPercentage ?? 0
                     })
                 .ToList();
 
