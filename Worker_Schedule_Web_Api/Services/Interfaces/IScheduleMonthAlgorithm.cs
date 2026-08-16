@@ -9,6 +9,7 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
             List<ShiftDemand> demands, 
             List<Availability> workers, 
             List<Schedule> schedules,
+            List<Guid> fullShiftWorkers,
             int year, 
             int month
             );

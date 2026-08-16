@@ -148,7 +148,12 @@ namespace Worker_Schedule_Web_Api.Services
 
             var workingUnits = await context.WorkingUnits.ToListAsync();
 
-            var result = scheduleMonthAlgorithm.Calculate(demands, workers, schedules, year, month);
+            List<Guid> fullShiftWorkers = await context.Workers
+                .Where(w => w.EmploymentPercentage == 100)
+                .Select(w => w.Id)
+                .ToListAsync();
+
+            var result = scheduleMonthAlgorithm.Calculate(demands, workers, schedules, fullShiftWorkers, year, month);
 
             var resultSchedules = new List<ScheduleDto>();
 
