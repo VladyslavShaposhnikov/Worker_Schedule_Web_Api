@@ -154,5 +154,14 @@ namespace Worker_Schedule_Web_Api.Controllers
             var result = await scheduler.GetTotalScheduledHours(year, month);
             return result;
         }
+
+        [HttpGet]
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
+        [Route("weekly-break-issues/{year:int}/{month:int}")]
+        public async Task<ActionResult<List<WeeklyBreakIssuesDto>>> GetWeeklyBreakIssues([FromRoute] int year, [FromRoute] int month)
+        {
+            var result = await scheduler.GetWeeklyBreakIssues(year, month);
+            return result;
+        }
     }
 }

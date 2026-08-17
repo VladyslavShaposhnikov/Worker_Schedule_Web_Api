@@ -22,5 +22,6 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
         Task<ScheduleDto> UpdateSchedule(Guid id, UpdateScheduleDto scheduleDto);
         Task<ScheduleDto> UpdateFinishTime(Guid id, TimeOnly finishTime);
         Task<double> GetTotalScheduledHours(int year, int month);
+        Task<List<WeeklyBreakIssuesDto>> GetWeeklyBreakIssues(int year, int month);
     }
 }
