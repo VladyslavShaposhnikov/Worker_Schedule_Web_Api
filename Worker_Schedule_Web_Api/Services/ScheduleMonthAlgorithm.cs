@@ -126,6 +126,13 @@ namespace Worker_Schedule_Web_Api.Services
 
             // After the initial scheduling, we need to ensure that each worker has at least 9 (hardcoded value) days off in the month.
 
+            FixDaysOff(year, month, fullShiftWorkers, result, workers, hoursSum);
+
+            return result;
+        }
+
+        private void FixDaysOff(int year, int month, List<Guid> fullShiftWorkers, List<SchedulingResult> result, List<Availability> workers, Dictionary<Guid, double> hoursSum)
+        {
             var monthDays = new List<int>(Enumerable.Range(1, DateTime.DaysInMonth(year, month)));
 
             var workersAndDaysOff = new Dictionary<Guid, List<int>>();
@@ -184,8 +191,6 @@ namespace Worker_Schedule_Web_Api.Services
                     }
                 }
             }
-
-            return result;
         }
 
         private Guid returnLowestHorsWorker(Dictionary<Guid, double> hoursSum, IEnumerable<Guid> workerIds)
