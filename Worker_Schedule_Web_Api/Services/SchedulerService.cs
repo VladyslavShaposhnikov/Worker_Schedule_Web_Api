@@ -540,7 +540,7 @@ namespace Worker_Schedule_Web_Api.Services
                 {
                     if (!workerSchedules.Any(s => s.Date == d))
                     {
-                        var breakInfo = await VerifyBreak(worker.Id, d);
+                        var breakInfo = VerifyBreak(workerSchedules, d);
                         if (breakInfo != null)
                         {
                             breaksInfoList.Add(breakInfo);
@@ -548,7 +548,7 @@ namespace Worker_Schedule_Web_Api.Services
                     }
                 }
 
-                var breaksMoreThan7Days = await FindDifferenceMoreThen7Days(breaksInfoList);
+                var breaksMoreThan7Days = FindDifferenceMoreThen7Days(breaksInfoList);
                 if (breaksMoreThan7Days != null)
                 {
                     foreach (var breakInfo in breaksMoreThan7Days)
@@ -562,7 +562,7 @@ namespace Worker_Schedule_Web_Api.Services
                                 WorkerName = $"{worker.FirstName} {worker.LastName}",
                                 BreakStart = breakInfo.Value.From,
                                 BreakEnd = breakInfo.Value.To,
-                                BreakDuration = breakInfo.Value.To - breakInfo.Value.From
+                                WorkStreakDuration = breakInfo.Value.To - breakInfo.Value.From
                             });
                         }
                     }
@@ -573,7 +573,7 @@ namespace Worker_Schedule_Web_Api.Services
             return result;
         }
 
-        private async Task<List<(DateTime From, DateTime To)?>> FindDifferenceMoreThen7Days(List<(DateTime from, DateTime to)?> breaksInfoList)
+        private List<(DateTime From, DateTime To)?> FindDifferenceMoreThen7Days(List<(DateTime from, DateTime to)?> breaksInfoList)
         {
             var result = new List<(DateTime From, DateTime To)?>();
             for (int i = 0; i < breaksInfoList.Count - 1; i++)
@@ -592,18 +592,18 @@ namespace Worker_Schedule_Web_Api.Services
             return result;
         }
 
-        private async Task<(DateTime From, DateTime To)?> VerifyBreak(Guid workerId, DateOnly date)
+        private static (DateTime From, DateTime To)? VerifyBreak(List<Schedule> schedules, DateOnly date)
         {
-            var breakStart = await context.Schedules
-                .Where(s => s.WorkerId == workerId && s.Date < date)
+            var breakStart = schedules
+                .Where(s => s.Date < date)
                 .OrderByDescending(s => s.Date)
                 .Select(s => s.Date.ToDateTime(s.WorkingUnit.To))
-                .FirstOrDefaultAsync();
-            var breakEnd = await context.Schedules
-                .Where(s => s.WorkerId == workerId && s.Date > date)
+                .FirstOrDefault();
+            var breakEnd = schedules
+                .Where(s => s.Date > date)
                 .OrderBy(s => s.Date)
                 .Select(s => s.Date.ToDateTime(s.WorkingUnit.From))
-                .FirstOrDefaultAsync();
+                .FirstOrDefault();
             if (breakStart == default || breakEnd == default || (breakEnd - breakStart).TotalHours < 35) return null;
             return (breakStart, breakEnd);
         }

@@ -7,6 +7,6 @@
         public string WorkerName { get; set; }
         public DateTime BreakStart { get; set; }
         public DateTime BreakEnd { get; set; }
-        public TimeSpan BreakDuration { get; set; }
+        public TimeSpan WorkStreakDuration { get; set; }
     }
 }
