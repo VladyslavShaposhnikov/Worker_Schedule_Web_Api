@@ -2,7 +2,7 @@
 using Worker_Schedule_Web_Api.Models.Schedule;
 using Worker_Schedule_Web_Api.Services.Interfaces;
 
-namespace Worker_Schedule_Web_Api.Services
+namespace Worker_Schedule_Web_Api.Services.Scheduling
 {
     public class SchedulingSaturdayAlgorithm : ISchedulingSaturdayAlgorithm
     {

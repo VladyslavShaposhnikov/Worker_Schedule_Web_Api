@@ -6,6 +6,7 @@ using Worker_Schedule_Web_Api.Data;
 using Worker_Schedule_Web_Api.Models.Identity;
 using Worker_Schedule_Web_Api.Services;
 using Worker_Schedule_Web_Api.Services.Interfaces;
+using Worker_Schedule_Web_Api.Services.Scheduling;
 
 namespace Worker_Schedule_Web_Api.Extensions
 {
@@ -24,6 +25,9 @@ namespace Worker_Schedule_Web_Api.Extensions
             services.AddScoped<IScheduleMonthAlgorithm, ScheduleMonthAlgorithm>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ISchedulingSaturdayAlgorithm, SchedulingSaturdayAlgorithm>();
+
+            services.AddTransient<IDaysOffOptimizer, DaysOffOptimizer>();
+            services.AddTransient<IWeeklyBreakOptimizer, WeeklyBreakOptimizer>();
 
             services.AddDbContext<AppDbContext>();
             services.AddIdentityCore<AppUser>()

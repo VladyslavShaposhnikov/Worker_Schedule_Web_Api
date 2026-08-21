@@ -6,7 +6,6 @@ using Worker_Schedule_Web_Api.Exceptions;
 using Worker_Schedule_Web_Api.Models.Domain;
 using Worker_Schedule_Web_Api.Models.Schedule;
 using Worker_Schedule_Web_Api.Services.Interfaces;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Worker_Schedule_Web_Api.Services
 {
@@ -14,6 +13,7 @@ namespace Worker_Schedule_Web_Api.Services
         AppDbContext context, 
         ISchedulingAlgorithm schedulingAlgorithm, 
         IScheduleMonthAlgorithm scheduleMonthAlgorithm,
+        IWeeklyBreakOptimizer weeklyBreakOptimizer,
         IConfiguration configuration,
         ILogger<SchedulerService> _logger) : IScheduler
     {
@@ -518,7 +518,6 @@ namespace Worker_Schedule_Web_Api.Services
 
         public async Task<List<WeeklyBreakIssuesDto>> GetWeeklyBreakIssues(int year, int month)
         {
-            var result = new List<WeeklyBreakIssuesDto>();
             var workers = await context.Workers.ToListAsync();
             var date = new DateOnly(year, month, 1);
             var lastDayOfMonth = new DateOnly(year, month, DateTime.DaysInMonth(year, month));
@@ -526,86 +525,10 @@ namespace Worker_Schedule_Web_Api.Services
                 .Include(s => s.WorkingUnit)
                 .Where(s => s.Date >= date.AddDays(-7) && s.Date <= lastDayOfMonth)
                 .ToListAsync();
-            var datesToCheck = new List<DateOnly>();
-            for (DateOnly d = date.AddDays(-7); d <= lastDayOfMonth; d = d.AddDays(1))
-            {
-                datesToCheck.Add(d);
-            }
 
-            foreach (var worker in workers)
-            { 
-                var workerSchedules = schedules.Where(s => s.WorkerId == worker.Id).ToList();
-                List<(DateTime from, DateTime to)?> breaksInfoList = new();
-                foreach (var d in datesToCheck)
-                {
-                    if (!workerSchedules.Any(s => s.Date == d))
-                    {
-                        var breakInfo = VerifyBreak(workerSchedules, d);
-                        if (breakInfo != null)
-                        {
-                            breaksInfoList.Add(breakInfo);
-                        }
-                    }
-                }
-
-                var breaksMoreThan7Days = FindDifferenceMoreThen7Days(breaksInfoList);
-                if (breaksMoreThan7Days != null)
-                {
-                    foreach (var breakInfo in breaksMoreThan7Days)
-                    {
-                        if (breakInfo.HasValue)
-                        {
-                            result.Add(new WeeklyBreakIssuesDto
-                            {
-                                WorkerId = worker.Id,
-                                WorkerInternalNumber = worker.WorkerInternalNumber,
-                                WorkerName = $"{worker.FirstName} {worker.LastName}",
-                                BreakStart = breakInfo.Value.From,
-                                BreakEnd = breakInfo.Value.To,
-                                WorkStreakDuration = breakInfo.Value.To - breakInfo.Value.From
-                            });
-                        }
-                    }
-                }
-            }
-
+            var result = weeklyBreakOptimizer.Fix(year, month, workers, schedules);
 
             return result;
-        }
-
-        private List<(DateTime From, DateTime To)?> FindDifferenceMoreThen7Days(List<(DateTime from, DateTime to)?> breaksInfoList)
-        {
-            var result = new List<(DateTime From, DateTime To)?>();
-            for (int i = 0; i < breaksInfoList.Count - 1; i++)
-            {
-                var currentBreak = breaksInfoList[i];
-                var nextBreak = breaksInfoList[i + 1];
-                if (currentBreak.HasValue && nextBreak.HasValue)
-                {
-                    var difference = nextBreak.Value.from - currentBreak.Value.to;
-                    if (difference.TotalDays > 7)
-                    {
-                        result.Add((currentBreak.Value.to, nextBreak.Value.from)); // Add the gap between the two breaks
-                    }
-                }
-            }
-            return result;
-        }
-
-        private static (DateTime From, DateTime To)? VerifyBreak(List<Schedule> schedules, DateOnly date)
-        {
-            var breakStart = schedules
-                .Where(s => s.Date < date)
-                .OrderByDescending(s => s.Date)
-                .Select(s => s.Date.ToDateTime(s.WorkingUnit.To))
-                .FirstOrDefault();
-            var breakEnd = schedules
-                .Where(s => s.Date > date)
-                .OrderBy(s => s.Date)
-                .Select(s => s.Date.ToDateTime(s.WorkingUnit.From))
-                .FirstOrDefault();
-            if (breakStart == default || breakEnd == default || (breakEnd - breakStart).TotalHours < 35) return null;
-            return (breakStart, breakEnd);
         }
 
         private WorkingUnit CreateWorkingUnitIfNotExists(List<WorkingUnit> workingUnits, TimeOnly from, TimeOnly to)
