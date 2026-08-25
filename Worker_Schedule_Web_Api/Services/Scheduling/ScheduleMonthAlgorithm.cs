@@ -128,9 +128,9 @@ namespace Worker_Schedule_Web_Api.Services.Scheduling
                 }
             }
 
-            // After the initial scheduling, we need to ensure that each worker has at least 9 (hardcoded value) days off in the month.
+            // After the initial scheduling, we need to ensure that each worker has at least 8 (hardcoded value) days off in the month.
 
-            daysOffOptimizer.Fix(year, month, fullShiftWorkers, result, workers, hoursSum, 9);
+            daysOffOptimizer.Fix(year, month, fullShiftWorkers, result, workers, hoursSum, 8);
 
             return result;
         }

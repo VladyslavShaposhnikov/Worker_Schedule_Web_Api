@@ -26,6 +26,16 @@ namespace Worker_Schedule_Web_Api.Data
                 .IsRequired();
             builder.Property(a => a.Apartment)
                 .HasMaxLength(10);
+
+            builder.HasData(new Address
+            {
+                Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                Country = "Poland",
+                City = "Cracov",
+                ZipCode = "30-644",
+                Street = "Kaminskiego",
+                BuildingNumber = "11"
+            });
         }
     }
 }

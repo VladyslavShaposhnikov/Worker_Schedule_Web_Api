@@ -10,6 +10,7 @@ namespace Worker_Schedule_Web_Api.Controllers
     [Route("api")]
     public class AccountController(IAuthService authService) : ControllerBase
     {
+        [Authorize(Roles = $"{AppRoles.Manager},{AppRoles.VisualMerchandiser}")]
         [HttpPost]
         [Route("register-worker")]
         public async Task<IActionResult> RegisterWorker([FromBody] RegisterUserDto registerUserDto)

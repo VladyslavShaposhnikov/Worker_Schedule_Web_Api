@@ -15,6 +15,13 @@ namespace Worker_Schedule_Web_Api.Data
             builder.Property(s => s.Name)
                 .HasMaxLength(200)
                 .IsRequired();
+
+            builder.HasData(new Store
+            {
+                Id = 1,
+                Name = "Bonarka",
+                AddressId = Guid.Parse("11111111-1111-1111-1111-111111111111")
+            });
         }
     }
 }
