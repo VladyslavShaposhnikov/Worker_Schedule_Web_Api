@@ -5,7 +5,7 @@ namespace Worker_Schedule_Web_Api.Services.Interfaces
 {
     public interface IWeeklyBreakOptimizer
     {
-        List<WeeklyBreakIssuesDto> Fix(
+        List<WeeklyBreakIssuesDto> Show(
             int year,
             int month,
             List<Worker> workers,

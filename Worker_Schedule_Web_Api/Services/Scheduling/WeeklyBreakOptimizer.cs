@@ -8,7 +8,7 @@ namespace Worker_Schedule_Web_Api.Services.Scheduling
     // todo : refactor this class to modify the schedules instead of returning a list of issues
     public class WeeklyBreakOptimizer : IWeeklyBreakOptimizer
     {
-        public List<WeeklyBreakIssuesDto> Fix(
+        public List<WeeklyBreakIssuesDto> Show(
             int year,
             int month,
             List<Worker> workers,

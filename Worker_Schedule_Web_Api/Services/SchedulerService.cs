@@ -181,7 +181,7 @@ namespace Worker_Schedule_Web_Api.Services
 
                 resultSchedules.Add(resultSchedule);
             }
-            
+
             await context.SaveChangesAsync();
             return resultSchedules;
         }
@@ -526,7 +526,7 @@ namespace Worker_Schedule_Web_Api.Services
                 .Where(s => s.Date >= date.AddDays(-7) && s.Date <= lastDayOfMonth)
                 .ToListAsync();
 
-            var result = weeklyBreakOptimizer.Fix(year, month, workers, schedules);
+            var result = weeklyBreakOptimizer.Show(year, month, workers, schedules);
 
             return result;
         }

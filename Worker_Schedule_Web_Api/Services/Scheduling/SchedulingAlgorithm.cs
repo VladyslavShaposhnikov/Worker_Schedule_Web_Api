@@ -1,13 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Worker_Schedule_Web_Api.Models.Schedule;
+﻿using Worker_Schedule_Web_Api.Models.Schedule;
 using Worker_Schedule_Web_Api.Services.Interfaces;
 
 namespace Worker_Schedule_Web_Api.Services.Scheduling
 {
     public class SchedulingAlgorithm(ISchedulingSaturdayAlgorithm schedulingSaturdayAlgorithm) : ISchedulingAlgorithm
     {
-
-        public List<SchedulingResult> Calculate(List<SchedulingDemand> demands, List<SchedulingWorker> workers, Dictionary<Guid, TimeOnly> closedStoreYesterday, Dictionary<Guid, int[]> workedSaturdays, int saturdays)
+        public List<SchedulingResult> Calculate(
+            List<SchedulingDemand> demands,
+            List<SchedulingWorker> workers,
+            Dictionary<Guid,
+            TimeOnly> closedStoreYesterday,
+            Dictionary<Guid,
+            int[]> workedSaturdays,
+            int saturdays)
         {
             var result = new List<SchedulingResult>();
             HashSet<Guid> alreadyAssignedForDay = new();
@@ -29,6 +34,13 @@ namespace Worker_Schedule_Web_Api.Services.Scheduling
                     .Where(w => w.From <= from30 && w.To >= to30 && !alreadyAssignedForDay.Contains(w.WorkerId))
                     .ToList();
 
+                if (TimeOnly.Parse((demand.To - demand.From).ToString()) < new TimeOnly(8, 0)) // if demand is less than 8 hours, do not allow to assign workers who are working 100% employment percentage
+                {
+                    matchingWorkers = matchingWorkers
+                        .Where(w => w.EmploymentPercentage < 100)
+                        .ToList();
+                }
+
                 if (demand.From <= new TimeOnly(10, 0)) // do not allow to assign workers who closed the day before if demand is early morning
                 {
                     var lessThen11Hours = new List<Guid>();
@@ -40,7 +52,7 @@ namespace Worker_Schedule_Web_Api.Services.Scheduling
                         }
                     }
 
-                    if (lessThen11Hours != null)
+                    if (lessThen11Hours.Count > 0)
                     {
                         matchingWorkers = matchingWorkers
                             .Where(w => !lessThen11Hours.Contains(w.WorkerId))
@@ -49,22 +61,11 @@ namespace Worker_Schedule_Web_Api.Services.Scheduling
                 }
 
                 matchingWorkers = matchingWorkers
-                    .OrderByDescending(w => w.Position == "Customer advisor") // prioritize customer advisors
+                    .OrderByDescending(w => w.Position == "Worker") // prioritize customer advisors
                     .ThenBy(w => w.Hours)
                     .ThenBy(w => w.To - w.From)
                     .ToList();
 
-                if (matchingWorkers.Any() && demand.From <= new TimeOnly(9, 30)) // try insert VM to the top of list
-                {
-                    var visualMerchendiser = matchingWorkers
-                        .FirstOrDefault(w => w.Position == "Visual merchandiser");
-
-                    if (visualMerchendiser != null)
-                    {
-                        matchingWorkers.Remove(visualMerchendiser);
-                        matchingWorkers.Insert(0, visualMerchendiser);
-                    }
-                }
                 if (matchingWorkers.Any() && (demand.From <= new TimeOnly(9, 30) || demand.To >= new TimeOnly(21, 0))) // move manager to the front of list early morning or late evening
                 {
                     var manager = matchingWorkers
@@ -75,6 +76,18 @@ namespace Worker_Schedule_Web_Api.Services.Scheduling
                     {
                         matchingWorkers.Remove(manager);
                         matchingWorkers.Insert(0, manager);
+                    }
+                }
+
+                if (matchingWorkers.Any() && demand.From <= new TimeOnly(9, 30)) // try insert VM to the top of list
+                {
+                    var visualMerchendiser = matchingWorkers
+                        .FirstOrDefault(w => w.Position == "Visual merchandiser");
+
+                    if (visualMerchendiser != null)
+                    {
+                        matchingWorkers.Remove(visualMerchendiser);
+                        matchingWorkers.Insert(0, visualMerchendiser);
                     }
                 }
 
